@@ -26,7 +26,7 @@ const DailyReportView: React.FC<DailyReportViewProps> = ({ orders, vegetables })
 
   // Filter orders by selected date
   const filteredOrders = orders.filter((order) => {
-    const orderDate = new Date(order.date);
+    const orderDate = new Date(order.order_date);
     return (
       orderDate.getFullYear() === selectedDate.getFullYear() &&
       orderDate.getMonth() === selectedDate.getMonth() &&
@@ -39,11 +39,13 @@ const DailyReportView: React.FC<DailyReportViewProps> = ({ orders, vegetables })
     let totalQuantity = 0;
 
     filteredOrders.forEach((order) => {
-      order.items.forEach((item) => {
-        if (item.vegetableId === vegetable.id) {
-          totalQuantity += item.quantity;
-        }
-      });
+      if (order.order_items) {
+        order.order_items.forEach((item) => {
+          if (item.vegetable_id === vegetable.id) {
+            totalQuantity += item.quantity;
+          }
+        });
+      }
     });
 
     return {
