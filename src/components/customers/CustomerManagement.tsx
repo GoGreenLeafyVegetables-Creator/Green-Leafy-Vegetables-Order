@@ -1,0 +1,132 @@
+
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store } from "lucide-react";
+import { Customer } from "@/types/customer";
+import { useCustomerAnalytics } from "@/hooks/use-supabase-data";
+import CustomerQRCode from "./CustomerQRCode";
+import CustomerPDFReport from "./CustomerPDFReport";
+
+interface CustomerManagementProps {
+  customer: Customer;
+}
+
+const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => {
+  const [showQR, setShowQR] = useState(false);
+  const [showPDF, setShowPDF] = useState(false);
+  
+  const { data: analytics, isLoading } = useCustomerAnalytics(customer.id);
+
+  const getStatusBadge = (balance: number) => {
+    if (balance === 0) return <Badge className="bg-green-500">No Dues</Badge>;
+    if (balance > 0) return <Badge variant="destructive">₹{balance.toFixed(2)} Due</Badge>;
+    return <Badge className="bg-blue-500">₹{Math.abs(balance).toFixed(2)} Advance</Badge>;
+  };
+
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-xl">{customer.name}</CardTitle>
+            <div className="flex flex-col gap-1 mt-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Phone className="h-3 w-3" />
+                {customer.mobile}
+              </div>
+              {customer.shop_name && (
+                <div className="flex items-center gap-1">
+                  <Store className="h-3 w-3" />
+                  {customer.shop_name}
+                </div>
+              )}
+              {customer.location && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {customer.location}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowQR(true)}
+            >
+              <QrCode className="h-4 w-4 mr-1" />
+              QR Code
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowPDF(true)}
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              PDF Report
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        {isLoading ? (
+          <div>Loading analytics...</div>
+        ) : analytics ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <Calendar className="h-5 w-5 mx-auto mb-1 text-blue-600" />
+              <div className="text-lg font-semibold text-blue-800">₹{analytics.monthlyTotal.toFixed(2)}</div>
+              <div className="text-xs text-blue-600">This Month</div>
+            </div>
+            
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <Calendar className="h-5 w-5 mx-auto mb-1 text-green-600" />
+              <div className="text-lg font-semibold text-green-800">₹{analytics.yearlyTotal.toFixed(2)}</div>
+              <div className="text-xs text-green-600">This Year</div>
+            </div>
+            
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <IndianRupee className="h-5 w-5 mx-auto mb-1 text-purple-600" />
+              <div className="text-lg font-semibold text-purple-800">{analytics.totalOrders}</div>
+              <div className="text-xs text-purple-600">Total Orders</div>
+            </div>
+            
+            <div className="text-center p-3 bg-orange-50 rounded-lg">
+              <div className="flex justify-center mb-1">
+                {getStatusBadge(analytics.totalBalance)}
+              </div>
+              <div className="text-xs text-orange-600">Balance Status</div>
+            </div>
+          </div>
+        ) : null}
+        
+        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <div className="text-sm font-medium">Customer Page URL:</div>
+          <div className="text-xs text-blue-600 break-all">
+            {window.location.origin}/customer/{customer.qr_code}
+          </div>
+        </div>
+      </CardContent>
+      
+      {showQR && (
+        <CustomerQRCode
+          customer={customer}
+          onClose={() => setShowQR(false)}
+        />
+      )}
+      
+      {showPDF && analytics && (
+        <CustomerPDFReport
+          customer={customer}
+          analytics={analytics}
+          onClose={() => setShowPDF(false)}
+        />
+      )}
+    </Card>
+  );
+};
+
+export default CustomerManagement;

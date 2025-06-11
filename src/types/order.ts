@@ -1,14 +1,33 @@
 
 export interface OrderItem {
-  vegetableId: string;
+  id?: string;
+  order_id?: string;
+  vegetable_id: string;
   quantity: number;
+  unit_price: number;
+  total_price: number;
 }
 
 export interface Order {
   id: string;
-  customerId: string;
-  date: string; // ISO string
-  items: OrderItem[];
-  timestamp: string; // ISO string
-  total: number;
+  customer_id: string;
+  order_date: string;
+  total_amount: number;
+  payment_status: 'pending' | 'partial' | 'paid';
+  paid_amount: number;
+  balance_amount: number;
+  created_at?: string;
+  updated_at?: string;
+  order_items?: OrderItem[];
+}
+
+export interface Payment {
+  id: string;
+  customer_id: string;
+  order_id?: string;
+  amount: number;
+  payment_date: string;
+  payment_method: string;
+  notes?: string;
+  created_at?: string;
 }

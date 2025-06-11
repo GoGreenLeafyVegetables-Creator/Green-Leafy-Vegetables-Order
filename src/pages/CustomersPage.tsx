@@ -5,18 +5,61 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import CustomerForm from "@/components/customers/CustomerForm";
 import CustomerList from "@/components/customers/CustomerList";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import CustomerManagement from "@/components/customers/CustomerManagement";
+import { useCustomers, useCreateCustomer } from "@/hooks/use-supabase-data";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Customer } from "@/types/customer";
 import { useToast } from "@/components/ui/use-toast";
 
 const CustomersPage = () => {
-  const [customers, setCustomers] = useLocalStorage<Customer[]>("customers", []);
+  const { data: customers = [], isLoading } = useCustomers();
+  const createCustomer = useCreateCustomer();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>(undefined);
   const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const { toast } = useToast();
+
+  const updateCustomer = useMutation({
+    mutationFn: async (customer: Customer) => {
+      const { data, error } = await supabase
+        .from('customers')
+        .update({
+          name: customer.name,
+          mobile: customer.mobile,
+          shop_name: customer.shop_name,
+          location: customer.location
+        })
+        .eq('id', customer.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    }
+  });
+
+  const deleteCustomer = useMutation({
+    mutationFn: async (customerId: string) => {
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', customerId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    }
+  });
 
   const handleAddCustomer = () => {
     setEditingCustomer(undefined);
@@ -35,29 +78,57 @@ const CustomersPage = () => {
 
   const confirmDeleteCustomer = () => {
     if (deletingCustomerId) {
-      setCustomers(customers.filter(customer => customer.id !== deletingCustomerId));
-      
-      toast({
-        title: "Customer Deleted",
-        description: "The customer has been removed successfully",
+      deleteCustomer.mutate(deletingCustomerId, {
+        onSuccess: () => {
+          toast({
+            title: "Customer Deleted",
+            description: "The customer has been removed successfully",
+          });
+          setIsDeleteDialogOpen(false);
+          setDeletingCustomerId(null);
+        },
+        onError: (error) => {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to delete customer",
+          });
+        }
       });
-      
-      setIsDeleteDialogOpen(false);
-      setDeletingCustomerId(null);
     }
   };
 
   const handleSaveCustomer = (customer: Customer) => {
     if (editingCustomer) {
-      // Update existing customer
-      setCustomers(customers.map(c => c.id === customer.id ? customer : c));
+      updateCustomer.mutate(customer, {
+        onSuccess: () => {
+          toast({
+            title: "Customer Updated",
+            description: "Customer information has been updated successfully",
+          });
+          setIsFormOpen(false);
+        }
+      });
     } else {
-      // Add new customer
-      setCustomers([...customers, customer]);
+      createCustomer.mutate(customer, {
+        onSuccess: () => {
+          toast({
+            title: "Customer Created",
+            description: "New customer has been added successfully",
+          });
+          setIsFormOpen(false);
+        }
+      });
     }
-    
-    setIsFormOpen(false);
   };
+
+  const handleManageCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+  };
+
+  if (isLoading) {
+    return <div className="space-y-6">Loading customers...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -66,13 +137,26 @@ const CustomersPage = () => {
         <Button onClick={handleAddCustomer}>Add Customer</Button>
       </div>
       
-      <CustomerList 
-        customers={customers}
-        onEdit={handleEditCustomer}
-        onDelete={handleDeleteCustomer}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-      />
+      {selectedCustomer ? (
+        <div className="space-y-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setSelectedCustomer(null)}
+          >
+            ← Back to Customer List
+          </Button>
+          <CustomerManagement customer={selectedCustomer} />
+        </div>
+      ) : (
+        <CustomerList 
+          customers={customers}
+          onEdit={handleEditCustomer}
+          onDelete={handleDeleteCustomer}
+          onManage={handleManageCustomer}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+      )}
       
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-lg">
