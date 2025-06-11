@@ -32,10 +32,15 @@ const OrderForm: React.FC<OrderFormProps> = ({
   initialData,
 }) => {
   const today = new Date();
-  const [date, setDate] = useState<Date>(initialData?.date ? new Date(initialData.date) : today);
-  const [customerId, setCustomerId] = useState<string>(initialData?.customerId || "");
+  const [date, setDate] = useState<Date>(initialData?.order_date ? new Date(initialData.order_date) : today);
+  const [customerId, setCustomerId] = useState<string>(initialData?.customer_id || "");
   const [items, setItems] = useState<OrderItem[]>(
-    initialData?.items || vegetables.map(veg => ({ vegetableId: veg.id, quantity: 0 }))
+    initialData?.order_items || vegetables.map(veg => ({ 
+      vegetable_id: veg.id, 
+      quantity: 0,
+      unit_price: veg.price,
+      total_price: 0
+    }))
   );
 
   const { toast } = useToast();
@@ -43,15 +48,25 @@ const OrderForm: React.FC<OrderFormProps> = ({
   const handleQuantityChange = (vegetableId: string, value: string) => {
     const newQuantity = parseFloat(value) || 0;
     setItems(prevItems =>
-      prevItems.map(item =>
-        item.vegetableId === vegetableId ? { ...item, quantity: newQuantity } : item
-      )
+      prevItems.map(item => {
+        if (item.vegetable_id === vegetableId) {
+          const vegetable = vegetables.find(v => v.id === vegetableId);
+          const unitPrice = vegetable?.price || 0;
+          return { 
+            ...item, 
+            quantity: newQuantity,
+            unit_price: unitPrice,
+            total_price: newQuantity * unitPrice
+          };
+        }
+        return item;
+      })
     );
   };
 
   const calculateTotal = () => {
     return items.reduce((sum, item) => {
-      const vegetable = vegetables.find(v => v.id === item.vegetableId);
+      const vegetable = vegetables.find(v => v.id === item.vegetable_id);
       return sum + (vegetable ? vegetable.price * item.quantity : 0);
     }, 0);
   };
@@ -79,13 +94,18 @@ const OrderForm: React.FC<OrderFormProps> = ({
       return;
     }
 
+    const total = calculateTotal();
+
     const order: Order = {
       id: initialData?.id || Date.now().toString(),
-      date: date.toISOString(),
-      customerId,
-      items: validItems,
-      timestamp: initialData?.timestamp || new Date().toISOString(),
-      total: calculateTotal(),
+      order_date: date.toISOString().split('T')[0],
+      customer_id: customerId,
+      order_items: validItems,
+      created_at: initialData?.created_at || new Date().toISOString(),
+      total_amount: total,
+      payment_status: 'pending',
+      paid_amount: 0,
+      balance_amount: total,
     };
 
     onSave(order);
@@ -142,7 +162,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 <SelectContent>
                   {customers.map((customer) => (
                     <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name} {customer.shopName && `- ${customer.shopName}`}
+                      {customer.name} {customer.shop_name && `- ${customer.shop_name}`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -160,9 +180,9 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 <div>
                   <span className="text-muted-foreground">Mobile:</span> {selectedCustomer.mobile}
                 </div>
-                {selectedCustomer.shopName && (
+                {selectedCustomer.shop_name && (
                   <div>
-                    <span className="text-muted-foreground">Shop:</span> {selectedCustomer.shopName}
+                    <span className="text-muted-foreground">Shop:</span> {selectedCustomer.shop_name}
                   </div>
                 )}
                 {selectedCustomer.location && (
@@ -188,7 +208,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                 </TableHeader>
                 <TableBody>
                   {vegetables.map((vegetable) => {
-                    const item = items.find(i => i.vegetableId === vegetable.id);
+                    const item = items.find(i => i.vegetable_id === vegetable.id);
                     const quantity = item ? item.quantity : 0;
                     
                     return (
