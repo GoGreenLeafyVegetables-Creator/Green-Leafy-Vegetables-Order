@@ -17,27 +17,29 @@ interface CustomerReportViewProps {
 }
 
 const CustomerReportView: React.FC<CustomerReportViewProps> = ({ orders, customers, vegetables }) => {
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("all");
 
   // Filter orders by selected customer
   const customerOrders = orders.filter((order) => 
-    !selectedCustomerId || order.customerId === selectedCustomerId
-  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    selectedCustomerId === "all" || order.customer_id === selectedCustomerId
+  ).sort((a, b) => new Date(b.order_date).getTime() - new Date(a.order_date).getTime());
 
   const downloadReport = () => {
     // Create CSV content
     let csvContent = "Order Date,Vegetable,Quantity,Unit,Price,Subtotal\n";
     
     customerOrders.forEach((order) => {
-      const orderDate = format(new Date(order.date), "yyyy-MM-dd");
+      const orderDate = format(new Date(order.order_date), "yyyy-MM-dd");
       
-      order.items.forEach((item) => {
-        const vegetable = vegetables.find((v) => v.id === item.vegetableId);
-        if (vegetable) {
-          const subtotal = vegetable.price * item.quantity;
-          csvContent += `${orderDate},"${vegetable.name}",${item.quantity},${vegetable.unit},${vegetable.price.toFixed(2)},${subtotal.toFixed(2)}\n`;
-        }
-      });
+      if (order.order_items) {
+        order.order_items.forEach((item) => {
+          const vegetable = vegetables.find((v) => v.id === item.vegetable_id);
+          if (vegetable) {
+            const subtotal = item.unit_price * item.quantity;
+            csvContent += `${orderDate},"${vegetable.name}",${item.quantity},${vegetable.unit},${item.unit_price.toFixed(2)},${subtotal.toFixed(2)}\n`;
+          }
+        });
+      }
     });
     
     // Create download link
@@ -72,7 +74,7 @@ const CustomerReportView: React.FC<CustomerReportViewProps> = ({ orders, custome
                 <SelectValue placeholder="Select customer" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Customers</SelectItem>
+                <SelectItem value="all">All Customers</SelectItem>
                 {customers.map((customer) => (
                   <SelectItem key={customer.id} value={customer.id}>
                     {customer.name}
@@ -116,35 +118,35 @@ const CustomerReportView: React.FC<CustomerReportViewProps> = ({ orders, custome
               </TableHeader>
               <TableBody>
                 {customerOrders.map((order) => {
-                  const customer = customers.find(c => c.id === order.customerId);
+                  const customer = customers.find(c => c.id === order.customer_id);
                   
                   return (
                     <React.Fragment key={order.id}>
                       <TableRow>
-                        <TableCell>{format(new Date(order.date), "dd/MM/yyyy")}</TableCell>
+                        <TableCell>{format(new Date(order.order_date), "dd/MM/yyyy")}</TableCell>
                         <TableCell>{customer?.name || "Unknown"}</TableCell>
-                        <TableCell>{order.items.length} items</TableCell>
+                        <TableCell>{order.order_items?.length || 0} items</TableCell>
                         <TableCell className="text-right font-medium">
-                          ₹{order.total.toFixed(2)}
+                          ₹{order.total_amount.toFixed(2)}
                         </TableCell>
                       </TableRow>
-                      {groupedByOrder && (
+                      {groupedByOrder && order.order_items && (
                         <TableRow>
                           <TableCell colSpan={4} className="p-0">
                             <div className="pl-6 pr-2 py-2 bg-muted/40">
                               <Table>
                                 <TableBody>
-                                  {order.items.map((item, idx) => {
-                                    const vegetable = vegetables.find(v => v.id === item.vegetableId);
+                                  {order.order_items.map((item, idx) => {
+                                    const vegetable = vegetables.find(v => v.id === item.vegetable_id);
                                     if (!vegetable) return null;
                                     
-                                    const subtotal = vegetable.price * item.quantity;
+                                    const subtotal = item.unit_price * item.quantity;
                                     
                                     return (
                                       <TableRow key={`${order.id}-${idx}`} className="border-b-0">
                                         <TableCell className="pl-0">{vegetable.name}</TableCell>
                                         <TableCell className="text-center">{item.quantity} {vegetable.unit}</TableCell>
-                                        <TableCell>₹{vegetable.price.toFixed(2)}</TableCell>
+                                        <TableCell>₹{item.unit_price.toFixed(2)}</TableCell>
                                         <TableCell className="text-right">₹{subtotal.toFixed(2)}</TableCell>
                                       </TableRow>
                                     );
@@ -164,7 +166,7 @@ const CustomerReportView: React.FC<CustomerReportViewProps> = ({ orders, custome
         ) : (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <p className="text-muted-foreground mb-4">
-              {selectedCustomerId
+              {selectedCustomerId !== "all"
                 ? "No orders found for the selected customer"
                 : "No orders found. Create your first order!"}
             </p>

@@ -22,7 +22,7 @@ const ExportData: React.FC<ExportDataProps> = ({ customers, vegetables, orders }
           customer.id,
           `"${customer.name}"`,
           `"${customer.mobile}"`,
-          `"${customer.shopName || ""}"`,
+          `"${customer.shop_name || ""}"`,
           `"${customer.location || ""}"`
         ].join(",")
       )
@@ -50,27 +50,29 @@ const ExportData: React.FC<ExportDataProps> = ({ customers, vegetables, orders }
   const exportOrders = () => {
     // Main orders data
     const ordersCSV = [
-      ["Order ID", "Date", "Customer ID", "Total", "Timestamp"].join(","),
+      ["Order ID", "Date", "Customer ID", "Total", "Created At"].join(","),
       ...orders.map(order => 
         [
           order.id,
-          new Date(order.date).toISOString().split('T')[0],
-          order.customerId,
-          order.total.toFixed(2),
-          new Date(order.timestamp).toISOString()
+          new Date(order.order_date).toISOString().split('T')[0],
+          order.customer_id,
+          order.total_amount.toFixed(2),
+          new Date(order.created_at).toISOString()
         ].join(",")
       )
     ].join("\n");
     
     // Order items data
     const orderItemsCSV = [
-      ["Order ID", "Vegetable ID", "Quantity"].join(","),
+      ["Order ID", "Vegetable ID", "Quantity", "Unit Price", "Total Price"].join(","),
       ...orders.flatMap(order => 
-        order.items.map(item => 
+        (order.order_items || []).map(item => 
           [
             order.id,
-            item.vegetableId,
-            item.quantity
+            item.vegetable_id,
+            item.quantity,
+            item.unit_price,
+            item.total_price
           ].join(",")
         )
       )
