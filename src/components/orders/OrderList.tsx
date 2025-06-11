@@ -43,7 +43,7 @@ const OrderList: React.FC<OrderListProps> = ({
       customerName.toLowerCase().includes(searchQuery.toLowerCase()) || 
       date.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesCustomerFilter = !selectedCustomerId || order.customer_id === selectedCustomerId;
+    const matchesCustomerFilter = !selectedCustomerId || selectedCustomerId === "all" || order.customer_id === selectedCustomerId;
     
     return matchesSearch && matchesCustomerFilter;
   });
@@ -72,7 +72,7 @@ const OrderList: React.FC<OrderListProps> = ({
                 <SelectValue placeholder="Filter by customer" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Customers</SelectItem>
+                <SelectItem value="all">All Customers</SelectItem>
                 {customers.map((customer) => (
                   <SelectItem key={customer.id} value={customer.id}>
                     {customer.name}

@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 const OrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState("all");
 
   const { data: orders = [], isLoading: ordersLoading } = useOrders();
   const { data: customers = [], isLoading: customersLoading } = useCustomers();
