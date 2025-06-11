@@ -17,6 +17,19 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
   const [showQR, setShowQR] = useState(false);
   const [showPDF, setShowPDF] = useState(false);
   
+  // Add safety check for customer
+  if (!customer) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-6">
+          <div className="text-center text-muted-foreground">
+            No customer selected. Please select a customer to manage.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const { data: analytics, isLoading } = useCustomerAnalytics(customer.id);
 
   const getStatusBadge = (balance: number) => {
