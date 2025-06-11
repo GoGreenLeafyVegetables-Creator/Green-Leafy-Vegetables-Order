@@ -105,7 +105,7 @@ const LoginForm = () => {
             </Button>
           </CardFooter>
         </form>
-      </CardHeader>
+      </Card>
     </div>
   );
 };
