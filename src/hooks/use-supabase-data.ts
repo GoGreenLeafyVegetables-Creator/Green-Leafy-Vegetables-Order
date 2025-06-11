@@ -1,7 +1,9 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Customer, Vegetable, Order, OrderItem, Payment } from "@/types";
+import { Customer } from "@/types/customer";
+import { Vegetable } from "@/types/vegetable";
+import { Order, OrderItem, Payment } from "@/types/order";
 
 // Customers
 export const useCustomers = () => {
@@ -32,6 +34,45 @@ export const useCreateCustomer = () => {
       
       if (error) throw error;
       return data as Customer;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    }
+  });
+};
+
+export const useUpdateCustomer = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...customer }: Partial<Customer> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('customers')
+        .update(customer)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Customer;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    }
+  });
+};
+
+export const useDeleteCustomer = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -75,6 +116,45 @@ export const useCreateVegetable = () => {
   });
 };
 
+export const useUpdateVegetable = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...vegetable }: Partial<Vegetable> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('vegetables')
+        .update(vegetable)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Vegetable;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vegetables'] });
+    }
+  });
+};
+
+export const useDeleteVegetable = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('vegetables')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vegetables'] });
+    }
+  });
+};
+
 // Orders
 export const useOrders = () => {
   return useQuery({
@@ -88,7 +168,7 @@ export const useOrders = () => {
             *,
             vegetables (name, unit)
           ),
-          customers (name, mobile)
+          customers (name, mobile, shop_name)
         `)
         .order('order_date', { ascending: false });
       
@@ -123,6 +203,47 @@ export const useCreateOrder = () => {
       if (itemsError) throw itemsError;
       
       return orderData as Order;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-analytics'] });
+    }
+  });
+};
+
+export const useUpdateOrder = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...order }: Partial<Order> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('orders')
+        .update(order)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Order;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-analytics'] });
+    }
+  });
+};
+
+export const useDeleteOrder = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -169,5 +290,23 @@ export const useCustomerAnalytics = (customerId?: string) => {
       };
     },
     enabled: !!customerId
+  });
+};
+
+// Get customer by QR code
+export const useCustomerByQrCode = (qrCode?: string) => {
+  return useQuery({
+    queryKey: ['customer-by-qr', qrCode],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('qr_code', qrCode!)
+        .single();
+      
+      if (error) throw error;
+      return data as Customer;
+    },
+    enabled: !!qrCode
   });
 };

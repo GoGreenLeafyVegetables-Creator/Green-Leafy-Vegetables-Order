@@ -7,17 +7,15 @@ import LowStockAlert from "@/components/dashboard/LowStockAlert";
 import OrderDetails from "@/components/orders/OrderDetails";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Users, Leaf, ClipboardList, Truck } from "lucide-react";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { Customer } from "@/types/customer";
-import { Vegetable } from "@/types/vegetable";
+import { Users, Leaf, ClipboardList, IndianRupee } from "lucide-react";
+import { useCustomers, useVegetables, useOrders } from "@/hooks/use-supabase-data";
 import { Order } from "@/types/order";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [customers] = useLocalStorage<Customer[]>("customers", []);
-  const [vegetables] = useLocalStorage<Vegetable[]>("vegetables", []);
-  const [orders] = useLocalStorage<Order[]>("orders", []);
+  const { data: customers = [] } = useCustomers();
+  const { data: vegetables = [] } = useVegetables();
+  const { data: orders = [] } = useOrders();
   
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
   
@@ -27,7 +25,7 @@ const Dashboard = () => {
   const totalOrders = orders.length;
   
   // Calculate total revenue
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+  const totalRevenue = orders.reduce((sum, order) => sum + order.total_amount, 0);
   
   // Handle order view
   const handleViewOrder = (order: Order) => {
@@ -42,8 +40,13 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <Button onClick={() => navigate("/orders/new")}>New Order</Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome to Go Green Leafy Vegetables Management System</p>
+        </div>
+        <Button onClick={() => navigate("/orders/new")} className="bg-green-600 hover:bg-green-700">
+          New Order
+        </Button>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -64,8 +67,8 @@ const Dashboard = () => {
         />
         <StatCard 
           title="Total Revenue" 
-          value={`₹${totalRevenue.toFixed(2)}`}
-          icon={<Truck className="h-4 w-4 text-muted-foreground" />}
+          value={`₹${totalRevenue.toLocaleString()}`}
+          icon={<IndianRupee className="h-4 w-4 text-muted-foreground" />}
         />
       </div>
       
@@ -87,7 +90,7 @@ const Dashboard = () => {
           <DialogContent className="max-w-3xl">
             <OrderDetails
               order={viewingOrder}
-              customer={customers.find(c => c.id === viewingOrder.customerId)}
+              customer={customers.find(c => c.id === viewingOrder.customer_id)}
               vegetables={vegetables}
               onEdit={handleEditOrder}
               onClose={() => setViewingOrder(null)}

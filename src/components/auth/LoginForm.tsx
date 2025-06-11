@@ -8,14 +8,17 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 
 interface LoginCredentials {
-  username: string;
+  email: string;
   password: string;
 }
 
-const DEFAULT_ADMIN = { username: "admin", password: "admin123" };
+const ADMIN_CREDENTIALS = { 
+  email: "gogreenleafyvegetables@gmail.com", 
+  password: "901901SSDD##ss" 
+};
 
 const LoginForm = () => {
-  const [credentials, setCredentials] = useState<LoginCredentials>({ username: "", password: "" });
+  const [credentials, setCredentials] = useState<LoginCredentials>({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -32,11 +35,15 @@ const LoginForm = () => {
     // Simulate API call
     setTimeout(() => {
       if (
-        credentials.username === DEFAULT_ADMIN.username && 
-        credentials.password === DEFAULT_ADMIN.password
+        credentials.email === ADMIN_CREDENTIALS.email && 
+        credentials.password === ADMIN_CREDENTIALS.password
       ) {
         // Store auth state
         localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("adminUser", JSON.stringify({
+          email: credentials.email,
+          name: "Go Green Leafy Vegetables Admin"
+        }));
         toast({
           title: "Login successful",
           description: "Welcome to the Vegetable Order Management System",
@@ -46,7 +53,7 @@ const LoginForm = () => {
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: "Invalid username or password",
+          description: "Invalid email or password",
         });
       }
       setIsLoading(false);
@@ -54,24 +61,28 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center text-primary">Vegetable Order Management</CardTitle>
+    <div className="flex justify-center items-center min-h-screen p-4 bg-gradient-to-br from-green-50 to-emerald-100">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 text-6xl">🥬</div>
+          <CardTitle className="text-2xl text-primary font-bold">
+            Go Green Leafy Vegetables
+          </CardTitle>
           <CardDescription className="text-center">
-            Login to access your dashboard
+            Admin Portal - Vegetable Order Management System
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="email">Email Address</Label>
               <Input
-                id="username"
-                name="username"
-                placeholder="Enter your username"
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
                 required
-                value={credentials.username}
+                value={credentials.email}
                 onChange={handleChange}
               />
             </div>
@@ -89,12 +100,12 @@ const LoginForm = () => {
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" type="submit" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login"}
+            <Button className="w-full bg-green-600 hover:bg-green-700" type="submit" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login to Admin Portal"}
             </Button>
           </CardFooter>
         </form>
-      </Card>
+      </CardHeader>
     </div>
   );
 };
