@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Vegetable } from "@/types/vegetable";
 
 interface VegetableFormProps {
-  onSave: (vegetable: Vegetable) => void;
+  onSave: (vegetable: Omit<Vegetable, 'id'>) => void;
   onCancel: () => void;
   initialData?: Vegetable;
 }
@@ -56,12 +56,7 @@ const VegetableForm: React.FC<VegetableFormProps> = ({ onSave, onCancel, initial
       return;
     }
     
-    // Create new vegetable or update existing one
-    const vegetableData: Vegetable = initialData
-      ? { ...initialData, ...formData }
-      : { id: Date.now().toString(), ...formData };
-    
-    onSave(vegetableData);
+    onSave(formData);
     
     toast({
       title: initialData ? "Vegetable Updated" : "Vegetable Added",

@@ -76,7 +76,7 @@ const VegetablesPage = () => {
           </p>
         </div>
         <VegetableForm
-          vegetable={editingVegetable}
+          initialData={editingVegetable}
           onSave={handleSaveVegetable}
           onCancel={() => {
             setShowForm(false);

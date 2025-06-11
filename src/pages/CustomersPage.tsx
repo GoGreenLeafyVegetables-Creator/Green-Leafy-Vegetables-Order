@@ -84,7 +84,7 @@ const CustomersPage = () => {
           </p>
         </div>
         <CustomerForm
-          customer={editingCustomer}
+          initialData={editingCustomer}
           onSave={handleSaveCustomer}
           onCancel={() => {
             setShowForm(false);

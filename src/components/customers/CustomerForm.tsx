@@ -8,7 +8,7 @@ import { Customer } from "@/types/customer";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface CustomerFormProps {
-  onSave: (customer: Customer) => void;
+  onSave: (customer: Omit<Customer, 'id'>) => void;
   onCancel: () => void;
   initialData?: Customer;
 }
@@ -19,13 +19,13 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, onCancel, initialDa
       ? {
           name: initialData.name,
           mobile: initialData.mobile,
-          shopName: initialData.shopName,
+          shop_name: initialData.shop_name,
           location: initialData.location,
         }
       : {
           name: "",
           mobile: "",
-          shopName: "",
+          shop_name: "",
           location: "",
         }
   );
@@ -50,12 +50,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, onCancel, initialDa
       return;
     }
     
-    // Create new customer or update existing one
-    const customerData: Customer = initialData
-      ? { ...initialData, ...formData }
-      : { id: Date.now().toString(), ...formData };
-    
-    onSave(customerData);
+    onSave(formData);
     
     toast({
       title: initialData ? "Customer Updated" : "Customer Added",
@@ -95,11 +90,11 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, onCancel, initialDa
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="shopName">Shop Name</Label>
+            <Label htmlFor="shop_name">Shop Name</Label>
             <Input
-              id="shopName"
-              name="shopName"
-              value={formData.shopName}
+              id="shop_name"
+              name="shop_name"
+              value={formData.shop_name || ""}
               onChange={handleChange}
               placeholder="Shop Name (Optional)"
             />
@@ -110,7 +105,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, onCancel, initialDa
             <Input
               id="location"
               name="location"
-              value={formData.location}
+              value={formData.location || ""}
               onChange={handleChange}
               placeholder="Location (Optional)"
             />
