@@ -6,6 +6,7 @@ export interface OrderItem {
   quantity: number;
   unit_price: number;
   total_price: number;
+  created_at?: string;
 }
 
 export interface Order {

@@ -28,7 +28,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
       <CardHeader>
         <CardTitle>Order Details</CardTitle>
         <div className="text-sm text-muted-foreground">
-          Created on {format(new Date(order.timestamp), "PPP 'at' p")}
+          Created on {format(new Date(order.created_at || order.order_date), "PPP 'at' p")}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -42,11 +42,11 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
               </div>
               <div className="grid grid-cols-2">
                 <span className="text-muted-foreground">Date:</span>
-                <span>{format(new Date(order.date), "PPP")}</span>
+                <span>{format(new Date(order.order_date), "PPP")}</span>
               </div>
               <div className="grid grid-cols-2">
                 <span className="text-muted-foreground">Total Amount:</span>
-                <span className="font-medium">₹{order.total.toFixed(2)}</span>
+                <span className="font-medium">₹{order.total_amount.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -63,10 +63,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                   <span className="text-muted-foreground">Mobile:</span>
                   <span>{customer.mobile}</span>
                 </div>
-                {customer.shopName && (
+                {customer.shop_name && (
                   <div className="grid grid-cols-2">
                     <span className="text-muted-foreground">Shop:</span>
-                    <span>{customer.shopName}</span>
+                    <span>{customer.shop_name}</span>
                   </div>
                 )}
                 {customer.location && (
@@ -94,20 +94,20 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {order.items.map((item) => {
-                  const vegetable = vegetables.find(v => v.id === item.vegetableId);
+                {order.order_items?.map((item) => {
+                  const vegetable = vegetables.find(v => v.id === item.vegetable_id);
                   if (!vegetable) return null;
                   
-                  const subtotal = vegetable.price * item.quantity;
+                  const subtotal = item.total_price;
                   
                   return (
-                    <TableRow key={item.vegetableId}>
+                    <TableRow key={item.id}>
                       <TableCell className="font-medium">
                         {vegetable.name}
                       </TableCell>
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{vegetable.unit}</TableCell>
-                      <TableCell>₹{vegetable.price.toFixed(2)}</TableCell>
+                      <TableCell>₹{item.unit_price.toFixed(2)}</TableCell>
                       <TableCell className="text-right">
                         ₹{subtotal.toFixed(2)}
                       </TableCell>
@@ -119,7 +119,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                     Total:
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    ₹{order.total.toFixed(2)}
+                    ₹{order.total_amount.toFixed(2)}
                   </TableCell>
                 </TableRow>
               </TableBody>

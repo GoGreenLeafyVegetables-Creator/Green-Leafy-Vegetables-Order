@@ -35,15 +35,15 @@ const OrderList: React.FC<OrderListProps> = ({
 }) => {
   // Filter orders based on search query and selected customer
   const filteredOrders = orders.filter(order => {
-    const customer = customers.find(c => c.id === order.customerId);
+    const customer = customers.find(c => c.id === order.customer_id);
     const customerName = customer?.name || "";
-    const date = format(new Date(order.date), "PPP");
+    const date = format(new Date(order.order_date), "PPP");
     
     const matchesSearch = 
       customerName.toLowerCase().includes(searchQuery.toLowerCase()) || 
       date.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesCustomerFilter = !selectedCustomerId || order.customerId === selectedCustomerId;
+    const matchesCustomerFilter = !selectedCustomerId || order.customer_id === selectedCustomerId;
     
     return matchesSearch && matchesCustomerFilter;
   });
@@ -98,21 +98,21 @@ const OrderList: React.FC<OrderListProps> = ({
               </TableHeader>
               <TableBody>
                 {filteredOrders.map((order) => {
-                  const customer = customers.find(c => c.id === order.customerId);
+                  const customer = customers.find(c => c.id === order.customer_id);
                   
                   return (
                     <TableRow key={order.id}>
                       <TableCell>
-                        {format(new Date(order.date), "dd/MM/yyyy")}
+                        {format(new Date(order.order_date), "dd/MM/yyyy")}
                       </TableCell>
                       <TableCell className="font-medium">
                         {customer?.name || "Unknown"}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {order.items.length} items
+                        {order.order_items?.length || 0} items
                       </TableCell>
                       <TableCell className="text-right">
-                        ₹{order.total.toFixed(2)}
+                        ₹{order.total_amount.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
