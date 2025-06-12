@@ -21,10 +21,14 @@ const App = () => (
           <Route path="/order/:qrCode" element={<CustomerOrderPage />} />
           
           {/* Admin routes with layout */}
-          <Route path="/*" element={<Layout />}>
-            {navItems.map(({ to, page }) => (
-              <Route key={to} path={to} element={page} />
-            ))}
+          <Route path="/" element={<Layout />}>
+            {navItems.map(({ to, page }) => {
+              // Convert absolute paths to relative paths for nested routing
+              const relativePath = to === "/" ? "" : to.startsWith("/") ? to.slice(1) : to;
+              return (
+                <Route key={to} path={relativePath} element={page} />
+              );
+            })}
           </Route>
         </Routes>
       </BrowserRouter>
