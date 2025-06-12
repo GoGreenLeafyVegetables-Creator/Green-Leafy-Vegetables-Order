@@ -46,6 +46,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
       total_price: 0
     }))
   );
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'mixed'>(
+    initialData?.payment_method || 'cash'
+  );
+  const [paidAmount, setPaidAmount] = useState<number>(initialData?.paid_amount || 0);
 
   const { toast } = useToast();
 
@@ -82,6 +86,12 @@ const OrderForm: React.FC<OrderFormProps> = ({
     }, 0);
   };
 
+  const calculatePaymentStatus = (total: number, paid: number): 'pending' | 'partial' | 'paid' => {
+    if (paid === 0) return 'pending';
+    if (paid >= total) return 'paid';
+    return 'partial';
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -107,6 +117,15 @@ const OrderForm: React.FC<OrderFormProps> = ({
 
     const total = calculateTotal();
 
+    if (paidAmount > total) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Payment",
+        description: "Paid amount cannot exceed total amount",
+      });
+      return;
+    }
+
     const order: Order = {
       id: initialData?.id || Date.now().toString(),
       order_date: date.toISOString().split('T')[0],
@@ -114,9 +133,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
       order_items: validItems,
       created_at: initialData?.created_at || new Date().toISOString(),
       total_amount: total,
-      payment_status: 'pending',
-      paid_amount: 0,
-      balance_amount: total,
+      payment_method: paymentMethod,
+      payment_status: calculatePaymentStatus(total, paidAmount),
+      paid_amount: paidAmount,
+      balance_amount: total - paidAmount,
     };
 
     onSave(order);
@@ -128,6 +148,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
   };
 
   const selectedCustomer = customers.find(c => c.id === customerId);
+  const total = calculateTotal();
 
   return (
     <Card className="w-full">
@@ -245,9 +266,44 @@ const OrderForm: React.FC<OrderFormProps> = ({
             </div>
           </div>
 
+          {/* Payment Details */}
+          <div className="space-y-4 p-4 bg-blue-50 rounded-md">
+            <h3 className="font-medium">Payment Details</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Payment Method</Label>
+                <Select value={paymentMethod} onValueChange={(value: 'cash' | 'upi' | 'mixed') => setPaymentMethod(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="upi">PhonePe UPI</SelectItem>
+                    <SelectItem value="mixed">Mixed (Cash + UPI)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Paid Amount</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max={total}
+                  step="0.01"
+                  value={paidAmount}
+                  onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                  placeholder="Enter paid amount"
+                />
+              </div>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Balance: ₹{(total - paidAmount).toFixed(2)}
+            </div>
+          </div>
+
           <div className="bg-primary/10 p-4 rounded-md text-right">
             <p className="font-medium text-lg">
-              Total: ₹{calculateTotal().toFixed(2)}
+              Total: ₹{total.toFixed(2)}
             </p>
           </div>
         </CardContent>

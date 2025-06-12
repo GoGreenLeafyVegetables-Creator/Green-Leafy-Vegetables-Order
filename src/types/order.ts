@@ -15,6 +15,7 @@ export interface Order {
   order_date: string;
   total_amount: number;
   payment_status: 'pending' | 'partial' | 'paid';
+  payment_method: 'cash' | 'upi' | 'mixed';
   paid_amount: number;
   balance_amount: number;
   created_at?: string;

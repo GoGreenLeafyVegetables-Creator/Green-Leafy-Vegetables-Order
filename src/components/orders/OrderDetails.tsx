@@ -1,12 +1,14 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Order } from "@/types/order";
 import { Customer } from "@/types/customer";
 import { Vegetable } from "@/types/vegetable";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import CustomerBill from "./CustomerBill";
 
 interface OrderDetailsProps {
   order: Order;
@@ -14,6 +16,7 @@ interface OrderDetailsProps {
   vegetables: Vegetable[];
   onEdit: (order: Order) => void;
   onClose: () => void;
+  onPaymentUpdate?: (orderId: string, paidAmount: number, paymentMethod: string) => void;
 }
 
 const OrderDetails: React.FC<OrderDetailsProps> = ({
@@ -22,120 +25,175 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   vegetables,
   onEdit,
   onClose,
+  onPaymentUpdate,
 }) => {
-  return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Order Details</CardTitle>
-        <div className="text-sm text-muted-foreground">
-          Created on {format(new Date(order.created_at || order.order_date), "PPP 'at' p")}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="font-medium mb-2">Order Information</h3>
-            <div className="space-y-1 text-sm">
-              <div className="grid grid-cols-2">
-                <span className="text-muted-foreground">Order ID:</span>
-                <span>{order.id}</span>
-              </div>
-              <div className="grid grid-cols-2">
-                <span className="text-muted-foreground">Date:</span>
-                <span>{format(new Date(order.order_date), "PPP")}</span>
-              </div>
-              <div className="grid grid-cols-2">
-                <span className="text-muted-foreground">Total Amount:</span>
-                <span className="font-medium">₹{order.total_amount.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
+  const [showBill, setShowBill] = useState(false);
 
-          {customer && (
+  const getPaymentStatusBadge = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return <Badge className="bg-green-500">Paid</Badge>;
+      case 'partial':
+        return <Badge className="bg-yellow-500">Partial</Badge>;
+      default:
+        return <Badge variant="destructive">Pending</Badge>;
+    }
+  };
+
+  const handlePaymentUpdate = (orderId: string, paidAmount: number, paymentMethod: string) => {
+    if (onPaymentUpdate) {
+      onPaymentUpdate(orderId, paidAmount, paymentMethod);
+    }
+  };
+
+  return (
+    <>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Order Details</CardTitle>
+          <div className="text-sm text-muted-foreground">
+            Created on {format(new Date(order.created_at || order.order_date), "PPP 'at' p")}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-medium mb-2">Customer Information</h3>
+              <h3 className="font-medium mb-2">Order Information</h3>
               <div className="space-y-1 text-sm">
                 <div className="grid grid-cols-2">
-                  <span className="text-muted-foreground">Name:</span>
-                  <span>{customer.name}</span>
+                  <span className="text-muted-foreground">Order ID:</span>
+                  <span>{order.id}</span>
                 </div>
                 <div className="grid grid-cols-2">
-                  <span className="text-muted-foreground">Mobile:</span>
-                  <span>{customer.mobile}</span>
+                  <span className="text-muted-foreground">Date:</span>
+                  <span>{format(new Date(order.order_date), "PPP")}</span>
                 </div>
-                {customer.shop_name && (
-                  <div className="grid grid-cols-2">
-                    <span className="text-muted-foreground">Shop:</span>
-                    <span>{customer.shop_name}</span>
-                  </div>
-                )}
-                {customer.location && (
-                  <div className="grid grid-cols-2">
-                    <span className="text-muted-foreground">Location:</span>
-                    <span>{customer.location}</span>
-                  </div>
-                )}
+                <div className="grid grid-cols-2">
+                  <span className="text-muted-foreground">Total Amount:</span>
+                  <span className="font-medium">₹{order.total_amount.toFixed(2)}</span>
+                </div>
+                <div className="grid grid-cols-2">
+                  <span className="text-muted-foreground">Payment Status:</span>
+                  <span>{getPaymentStatusBadge(order.payment_status)}</span>
+                </div>
+                <div className="grid grid-cols-2">
+                  <span className="text-muted-foreground">Payment Method:</span>
+                  <span className="capitalize">{order.payment_method || 'cash'}</span>
+                </div>
+                <div className="grid grid-cols-2">
+                  <span className="text-muted-foreground">Paid Amount:</span>
+                  <span>₹{order.paid_amount.toFixed(2)}</span>
+                </div>
+                <div className="grid grid-cols-2">
+                  <span className="text-muted-foreground">Balance:</span>
+                  <span className={order.balance_amount > 0 ? "text-red-600 font-medium" : "text-green-600"}>
+                    ₹{order.balance_amount.toFixed(2)}
+                  </span>
+                </div>
               </div>
             </div>
-          )}
-        </div>
 
-        <div>
-          <h3 className="font-medium mb-2">Order Items</h3>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead className="text-right">Subtotal</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {order.order_items?.map((item) => {
-                  const vegetable = vegetables.find(v => v.id === item.vegetable_id);
-                  if (!vegetable) return null;
-                  
-                  const subtotal = item.total_price;
-                  
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        {vegetable.name}
-                      </TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{vegetable.unit}</TableCell>
-                      <TableCell>₹{item.unit_price.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
-                        ₹{subtotal.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                <TableRow>
-                  <TableCell colSpan={4} className="text-right font-medium">
-                    Total:
-                  </TableCell>
-                  <TableCell className="text-right font-medium">
-                    ₹{order.total_amount.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+            {customer && (
+              <div>
+                <h3 className="font-medium mb-2">Customer Information</h3>
+                <div className="space-y-1 text-sm">
+                  <div className="grid grid-cols-2">
+                    <span className="text-muted-foreground">Name:</span>
+                    <span>{customer.name}</span>
+                  </div>
+                  <div className="grid grid-cols-2">
+                    <span className="text-muted-foreground">Mobile:</span>
+                    <span>{customer.mobile}</span>
+                  </div>
+                  {customer.shop_name && (
+                    <div className="grid grid-cols-2">
+                      <span className="text-muted-foreground">Shop:</span>
+                      <span>{customer.shop_name}</span>
+                    </div>
+                  )}
+                  {customer.location && (
+                    <div className="grid grid-cols-2">
+                      <span className="text-muted-foreground">Location:</span>
+                      <span>{customer.location}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={onClose}>
-          Close
-        </Button>
-        <Button onClick={() => onEdit(order)}>
-          Edit Order
-        </Button>
-      </CardFooter>
-    </Card>
+
+          <div>
+            <h3 className="font-medium mb-2">Order Items</h3>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Unit</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead className="text-right">Subtotal</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {order.order_items?.map((item) => {
+                    const vegetable = vegetables.find(v => v.id === item.vegetable_id);
+                    if (!vegetable) return null;
+                    
+                    const subtotal = item.total_price;
+                    
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">
+                          {vegetable.name}
+                        </TableCell>
+                        <TableCell>{item.quantity}</TableCell>
+                        <TableCell>{vegetable.unit}</TableCell>
+                        <TableCell>₹{item.unit_price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          ₹{subtotal.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-right font-medium">
+                      Total:
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      ₹{order.total_amount.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowBill(true)}>
+              Generate Bill
+            </Button>
+            <Button onClick={() => onEdit(order)}>
+              Edit Order
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
+
+      {showBill && customer && (
+        <CustomerBill
+          order={order}
+          customer={customer}
+          vegetables={vegetables}
+          onClose={() => setShowBill(false)}
+          onPaymentUpdate={handlePaymentUpdate}
+        />
+      )}
+    </>
   );
 };
 
