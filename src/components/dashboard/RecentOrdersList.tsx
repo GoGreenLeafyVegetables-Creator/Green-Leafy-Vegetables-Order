@@ -17,7 +17,7 @@ interface RecentOrdersListProps {
 const RecentOrdersList: React.FC<RecentOrdersListProps> = ({ orders, customers, onViewOrder }) => {
   // Get the 5 most recent orders
   const recentOrders = [...orders]
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .sort((a, b) => new Date(b.order_date).getTime() - new Date(a.order_date).getTime())
     .slice(0, 5);
 
   return (
@@ -40,21 +40,21 @@ const RecentOrdersList: React.FC<RecentOrdersListProps> = ({ orders, customers, 
               </TableHeader>
               <TableBody>
                 {recentOrders.map((order) => {
-                  const customer = customers.find(c => c.id === order.customerId);
+                  const customer = customers.find(c => c.id === order.customer_id);
                   
                   return (
                     <TableRow key={order.id}>
                       <TableCell>
-                        {format(new Date(order.date), "dd/MM/yyyy")}
+                        {format(new Date(order.order_date), "dd/MM/yyyy")}
                       </TableCell>
                       <TableCell className="font-medium">
                         {customer?.name || "Unknown"}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {order.items.length} items
+                        {order.order_items?.length || 0} items
                       </TableCell>
                       <TableCell className="text-right">
-                        ₹{order.total.toFixed(2)}
+                        ₹{order.total_amount.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button

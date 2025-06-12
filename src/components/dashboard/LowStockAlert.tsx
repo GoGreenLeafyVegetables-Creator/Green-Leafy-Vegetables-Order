@@ -18,7 +18,7 @@ const LowStockAlert: React.FC<LowStockAlertProps> = ({ orders, vegetables, days 
   startDate.setDate(startDate.getDate() - days);
   
   const recentOrders = orders.filter(order => {
-    const orderDate = new Date(order.date);
+    const orderDate = new Date(order.order_date);
     return orderDate >= startDate && orderDate <= today;
   });
 
@@ -26,11 +26,11 @@ const LowStockAlert: React.FC<LowStockAlertProps> = ({ orders, vegetables, days 
   const vegetableConsumption: Record<string, number> = {};
   
   recentOrders.forEach(order => {
-    order.items.forEach(item => {
-      if (!vegetableConsumption[item.vegetableId]) {
-        vegetableConsumption[item.vegetableId] = 0;
+    order.order_items?.forEach(item => {
+      if (!vegetableConsumption[item.vegetable_id]) {
+        vegetableConsumption[item.vegetable_id] = 0;
       }
-      vegetableConsumption[item.vegetableId] += item.quantity;
+      vegetableConsumption[item.vegetable_id] += item.quantity;
     });
   });
   
