@@ -1,104 +1,41 @@
 
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { 
-  LayoutDashboard, 
-  Users, 
-  ShoppingCart, 
-  Package, 
-  FileText,
-  CreditCard,
-  LogOut 
-} from "lucide-react";
+import { navItems } from "@/nav-items";
+import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const location = useLocation();
-  
-  const navItems = [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/customers", label: "Customers", icon: Users },
-    { path: "/vegetables", label: "Vegetables", icon: Package },
-    { path: "/orders", label: "Orders", icon: ShoppingCart },
-    { path: "/payments", label: "Payments", icon: CreditCard },
-    { path: "/reports", label: "Reports", icon: FileText },
-  ];
-
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    window.location.href = "/";
-  };
 
   return (
-    <nav className="bg-background border-b border-border">
+    <nav className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center space-x-8">
-            <Link to="/dashboard" className="flex items-center space-x-2">
-              <Package className="h-6 w-6 text-primary" />
-              <span className="font-bold text-lg">VeggieShop</span>
-            </Link>
-            
-            <Separator orientation="vertical" className="h-6" />
-            
-            <div className="hidden md:flex items-center space-x-4">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
-                
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
+          <div className="flex">
+            <div className="flex-shrink-0 flex items-center">
+              <Link to="/" className="text-xl font-bold text-green-600">
+                Go Green Leafy Vegetables
+              </Link>
             </div>
-          </div>
-          
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              onClick={handleLogout}
-              className="flex items-center space-x-2"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
-          </div>
-        </div>
-        
-        {/* Mobile navigation */}
-        <div className="md:hidden pb-3">
-          <div className="flex flex-wrap gap-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              
-              return (
+            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+              {navItems
+                .filter(item => !item.hideFromNav)
+                .map((item) => (
                 <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  }`}
+                  key={item.to}
+                  to={item.to}
+                  className={cn(
+                    "inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium",
+                    location.pathname === item.to
+                      ? "border-green-500 text-gray-900"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  )}
                 >
-                  <Icon className="h-3 w-3" />
-                  <span>{item.label}</span>
+                  <span className="mr-2">{item.icon}</span>
+                  {item.title}
                 </Link>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
       </div>
