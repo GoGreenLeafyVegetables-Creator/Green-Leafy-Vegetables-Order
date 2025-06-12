@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ interface OrderFormProps {
   customers: Customer[];
   vegetables: Vegetable[];
   initialData?: Order;
+  preSelectedCustomerId?: string | null;
 }
 
 const OrderForm: React.FC<OrderFormProps> = ({
@@ -30,10 +31,13 @@ const OrderForm: React.FC<OrderFormProps> = ({
   customers,
   vegetables,
   initialData,
+  preSelectedCustomerId,
 }) => {
   const today = new Date();
   const [date, setDate] = useState<Date>(initialData?.order_date ? new Date(initialData.order_date) : today);
-  const [customerId, setCustomerId] = useState<string>(initialData?.customer_id || "");
+  const [customerId, setCustomerId] = useState<string>(
+    initialData?.customer_id || preSelectedCustomerId || ""
+  );
   const [items, setItems] = useState<OrderItem[]>(
     initialData?.order_items || vegetables.map(veg => ({ 
       vegetable_id: veg.id, 
@@ -44,6 +48,13 @@ const OrderForm: React.FC<OrderFormProps> = ({
   );
 
   const { toast } = useToast();
+
+  // Set pre-selected customer when component mounts
+  useEffect(() => {
+    if (preSelectedCustomerId && !initialData) {
+      setCustomerId(preSelectedCustomerId);
+    }
+  }, [preSelectedCustomerId, initialData]);
 
   const handleQuantityChange = (vegetableId: string, value: string) => {
     const newQuantity = parseFloat(value) || 0;

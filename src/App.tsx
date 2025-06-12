@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +13,7 @@ import VegetablesPage from "./pages/VegetablesPage";
 import OrdersPage from "./pages/OrdersPage";
 import OrderFormPage from "./pages/OrderFormPage";
 import ReportsPage from "./pages/ReportsPage";
+import PaymentsPage from "./pages/PaymentsPage";
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import CustomerPublicPage from "./pages/CustomerPublicPage";
@@ -39,6 +41,7 @@ const App = () => (
               <Route path="/orders/new" element={<OrderFormPage />} />
               <Route path="/orders/edit/:id" element={<OrderFormPage />} />
               <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/payments" element={<PaymentsPage />} />
             </Route>
           </Route>
           

@@ -1,6 +1,6 @@
 
-import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import OrderForm from "@/components/orders/OrderForm";
 import { useCustomers, useVegetables, useCreateOrder, useUpdateOrder, useOrders } from "@/hooks/use-supabase-data";
 import { useToast } from "@/components/ui/use-toast";
@@ -9,6 +9,8 @@ import { Order, OrderItem } from "@/types/order";
 const OrderFormPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const preSelectedCustomerId = searchParams.get('customer');
   const { toast } = useToast();
   
   const { data: customers = [], isLoading: customersLoading } = useCustomers();
@@ -99,6 +101,7 @@ const OrderFormPage = () => {
         customers={customers}
         vegetables={vegetables}
         initialData={initialData}
+        preSelectedCustomerId={preSelectedCustomerId}
       />
     </div>
   );

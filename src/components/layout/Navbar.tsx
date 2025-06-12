@@ -1,81 +1,108 @@
 
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { 
+  LayoutDashboard, 
+  Users, 
+  ShoppingCart, 
+  Package, 
+  FileText,
+  CreditCard,
+  LogOut 
+} from "lucide-react";
 
 const Navbar = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  
+  const navItems = [
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/customers", label: "Customers", icon: Users },
+    { path: "/vegetables", label: "Vegetables", icon: Package },
+    { path: "/orders", label: "Orders", icon: ShoppingCart },
+    { path: "/payments", label: "Payments", icon: CreditCard },
+    { path: "/reports", label: "Reports", icon: FileText },
+  ];
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
-    navigate("/login");
+    window.location.href = "/";
   };
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  const navItems = [
-    { path: "/dashboard", label: "Dashboard" },
-    { path: "/customers", label: "Customers" },
-    { path: "/vegetables", label: "Vegetables" },
-    { path: "/orders", label: "Orders" },
-    { path: "/reports", label: "Reports" },
-  ];
 
   return (
-    <header className="sticky top-0 z-10 border-b bg-background">
-      <div className="flex h-16 items-center px-4 md:px-6">
-        <div className="flex items-center gap-2 text-lg font-semibold md:text-xl">
-          <span className="text-primary">🥬</span>
-          <span className="hidden md:inline-block">Vegetable Order Management</span>
-          <span className="md:hidden">VOM</span>
-        </div>
-        <nav className="ml-auto flex items-center gap-4 sm:gap-6">
-          <div className="hidden md:flex md:items-center md:gap-4">
-            {navItems.map((item) => (
-              <Button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                variant={isActive(item.path) ? "default" : "ghost"}
-                size="sm"
-                className={cn(
-                  "text-sm transition-colors",
-                  isActive(item.path) ? "bg-primary text-primary-foreground" : ""
-                )}
-              >
-                {item.label}
-              </Button>
-            ))}
+    <nav className="bg-background border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center space-x-8">
+            <Link to="/dashboard" className="flex items-center space-x-2">
+              <Package className="h-6 w-6 text-primary" />
+              <span className="font-bold text-lg">VeggieShop</span>
+            </Link>
+            
+            <Separator orientation="vertical" className="h-6" />
+            
+            <div className="hidden md:flex items-center space-x-4">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout}>
-            <LogOut className="h-5 w-5" />
-            <span className="sr-only">Logout</span>
-          </Button>
-        </nav>
-      </div>
-      <div className="md:hidden overflow-x-auto scrollbar-hide">
-        <div className="flex px-4 pb-2 gap-2">
-          {navItems.map((item) => (
+          
+          <div className="flex items-center">
             <Button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              variant={isActive(item.path) ? "default" : "outline"}
-              size="sm"
-              className={cn(
-                "text-sm whitespace-nowrap",
-                isActive(item.path) ? "bg-primary text-primary-foreground" : ""
-              )}
+              variant="ghost"
+              onClick={handleLogout}
+              className="flex items-center space-x-2"
             >
-              {item.label}
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
-          ))}
+          </div>
+        </div>
+        
+        {/* Mobile navigation */}
+        <div className="md:hidden pb-3">
+          <div className="flex flex-wrap gap-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  }`}
+                >
+                  <Icon className="h-3 w-3" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </header>
+    </nav>
   );
 };
 

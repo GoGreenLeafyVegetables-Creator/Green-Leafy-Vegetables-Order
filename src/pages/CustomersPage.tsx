@@ -6,6 +6,7 @@ import CustomerManagement from "@/components/customers/CustomerManagement";
 import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer } from "@/hooks/use-supabase-data";
 import { Customer } from "@/types/customer";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const CustomersPage = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -19,6 +20,7 @@ const CustomersPage = () => {
   const updateCustomer = useUpdateCustomer();
   const deleteCustomer = useDeleteCustomer();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleEdit = (customer: Customer) => {
     setEditingCustomer(customer);
@@ -44,6 +46,11 @@ const CustomersPage = () => {
   const handleManage = (customer: Customer) => {
     setSelectedCustomer(customer);
     setShowManagement(true);
+  };
+
+  const handleAddOrder = (customer: Customer) => {
+    // Navigate to order form with pre-selected customer
+    navigate(`/orders/new?customer=${customer.id}`);
   };
 
   const handleSaveCustomer = async (customerData: Omit<Customer, 'id'>) => {
@@ -145,6 +152,7 @@ const CustomersPage = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onManage={handleManage}
+          onAddOrder={handleAddOrder}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
