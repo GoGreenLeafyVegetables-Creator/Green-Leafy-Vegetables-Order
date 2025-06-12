@@ -21,15 +21,11 @@ const App = () => (
           <Route path="/order/:qrCode" element={<CustomerOrderPage />} />
           
           {/* Admin routes with layout */}
-          <Route path="/*" element={
-            <Layout>
-              <Routes>
-                {navItems.map(({ to, page }) => (
-                  <Route key={to} path={to} element={page} />
-                ))}
-              </Routes>
-            </Layout>
-          } />
+          <Route path="/*" element={<Layout />}>
+            {navItems.map(({ to, page }) => (
+              <Route key={to} path={to} element={page} />
+            ))}
+          </Route>
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
