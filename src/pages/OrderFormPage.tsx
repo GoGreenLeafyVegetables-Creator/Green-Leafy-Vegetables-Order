@@ -38,6 +38,7 @@ const OrderFormPage = () => {
           order_date: orderData.order_date,
           total_amount: orderData.total_amount,
           payment_status: orderData.payment_status,
+          payment_method: orderData.payment_method,
           paid_amount: orderData.paid_amount,
           balance_amount: orderData.balance_amount
         });
@@ -47,6 +48,7 @@ const OrderFormPage = () => {
           order_date: orderData.order_date,
           total_amount: orderData.total_amount,
           payment_status: orderData.payment_status as 'pending' | 'partial' | 'paid',
+          payment_method: orderData.payment_method as 'cash' | 'upi' | 'mixed',
           paid_amount: orderData.paid_amount,
           balance_amount: orderData.balance_amount
         };
