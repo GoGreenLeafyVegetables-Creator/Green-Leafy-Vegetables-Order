@@ -55,7 +55,14 @@ const CustomerOrderApp = () => {
       {/* Header */}
       <div className="bg-green-600 text-white p-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-2">Go Green Leafy Vegetables</h1>
+          <div className="flex items-center mb-2">
+            <img 
+              src="/lovable-uploads/6b34b46f-d989-4539-ae7d-13e70d1fd5df.png" 
+              alt="Go Green Leafy Vegetables Logo" 
+              className="h-8 w-8 mr-3"
+            />
+            <h1 className="text-2xl font-bold">Go Green Leafy Vegetables</h1>
+          </div>
           <div className="bg-green-700 rounded-lg p-3">
             <div className="flex items-center gap-2 mb-1">
               <Store className="h-4 w-4" />

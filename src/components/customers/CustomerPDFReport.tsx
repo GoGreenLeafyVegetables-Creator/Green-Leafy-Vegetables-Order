@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { text-align: center; border-bottom: 2px solid #22c55e; padding-bottom: 20px; margin-bottom: 30px; }
+            .logo { width: 50px; height: 50px; margin: 0 auto 10px auto; display: block; }
             .company-name { color: #22c55e; font-size: 24px; font-weight: bold; }
             .customer-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
             .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
@@ -38,6 +38,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
         </head>
         <body>
           <div class="header">
+            <img src="/lovable-uploads/6b34b46f-d989-4539-ae7d-13e70d1fd5df.png" alt="Logo" class="logo" />
             <div class="company-name">GO GREEN LEAFY VEGETABLES</div>
             <div>Customer Business Report</div>
           </div>

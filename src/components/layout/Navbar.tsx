@@ -1,26 +1,11 @@
 
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { navItems } from "@/nav-items";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 
 const Navbar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("adminUser");
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out of the admin portal",
-    });
-    navigate("/login");
-  };
 
   return (
     <nav className="bg-white border-b border-gray-200">
@@ -28,6 +13,11 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
+              <img 
+                src="/lovable-uploads/6b34b46f-d989-4539-ae7d-13e70d1fd5df.png" 
+                alt="Go Green Leafy Vegetables Logo" 
+                className="h-10 w-10 mr-3"
+              />
               <Link to="/" className="text-xl font-bold text-green-600">
                 Go Green Leafy Vegetables
               </Link>
@@ -51,17 +41,6 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
-          </div>
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
           </div>
         </div>
       </div>
