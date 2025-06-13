@@ -1,11 +1,26 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { navItems } from "@/nav-items";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("adminUser");
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out of the admin portal",
+    });
+    navigate("/login");
+  };
 
   return (
     <nav className="bg-white border-b border-gray-200">
@@ -36,6 +51,17 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
+          </div>
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
           </div>
         </div>
       </div>

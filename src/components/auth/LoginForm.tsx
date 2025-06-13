@@ -48,7 +48,8 @@ const LoginForm = () => {
           title: "Login successful",
           description: "Welcome to the Vegetable Order Management System",
         });
-        navigate("/dashboard");
+        // Use window.location for immediate redirect
+        window.location.href = "/dashboard";
       } else {
         toast({
           variant: "destructive",
