@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { navItems } from "./nav-items";
 import Layout from "./components/layout/Layout";
 import CustomerOrderPage from "./pages/CustomerOrderPage";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Login route - no layout */}
+          <Route path="/login" element={<Login />} />
+          
           {/* Customer ordering app route - no layout */}
           <Route path="/order/:qrCode" element={<CustomerOrderPage />} />
           
