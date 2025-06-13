@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer } from "@/types/customer";
@@ -244,6 +243,44 @@ export const useDeleteOrder = () => {
         .eq('id', id);
       
       if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-analytics'] });
+    }
+  });
+};
+
+// Customer order creation (simplified for customer app)
+export const useCreateCustomerOrder = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) => {
+      const { order_items, ...order } = orderData;
+      
+      const { data: orderResult, error: orderError } = await supabase
+        .from('orders')
+        .insert([order])
+        .select()
+        .single();
+      
+      if (orderError) throw orderError;
+      
+      if (order_items && order_items.length > 0) {
+        const orderItems = order_items.map(item => ({
+          ...item,
+          order_id: orderResult.id
+        }));
+        
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
+        
+        if (itemsError) throw itemsError;
+      }
+      
+      return orderResult as Order;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });

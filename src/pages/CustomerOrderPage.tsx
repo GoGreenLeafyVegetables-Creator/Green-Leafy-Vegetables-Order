@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { useCustomers, useVegetables, useCreateOrder } from "@/hooks/use-supabase-data";
+import { useCustomers, useVegetables, useCreateCustomerOrder } from "@/hooks/use-supabase-data";
 import { useToast } from "@/components/ui/use-toast";
 import CustomerOrderForm from "@/components/customer-app/CustomerOrderForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ const CustomerOrderPage = () => {
   const { qrCode } = useParams<{ qrCode: string }>();
   const { data: customers = [], isLoading: customersLoading } = useCustomers();
   const { data: vegetables = [], isLoading: vegetablesLoading } = useVegetables();
-  const createOrder = useCreateOrder();
+  const createOrder = useCreateCustomerOrder();
   const { toast } = useToast();
   const [orderPlaced, setOrderPlaced] = useState(false);
 
