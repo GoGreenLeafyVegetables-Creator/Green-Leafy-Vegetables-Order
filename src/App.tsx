@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { navItems } from "./nav-items";
 import Layout from "./components/layout/Layout";
 import CustomerOrderPage from "./pages/CustomerOrderPage";
+import CustomerPublicPage from "./pages/CustomerPublicPage";
 import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,9 @@ const App = () => (
           
           {/* Customer ordering app route - no layout */}
           <Route path="/order/:qrCode" element={<CustomerOrderPage />} />
+          
+          {/* Customer public page route - no layout */}
+          <Route path="/customer/:qrCode" element={<CustomerPublicPage />} />
           
           {/* Admin routes with layout */}
           <Route path="/" element={<Layout />}>
