@@ -14,7 +14,7 @@ import BackupPage from "./pages/BackupPage";
 export const navItems = [
   {
     title: "Dashboard",
-    to: "/",
+    to: "/dashboard",
     icon: <HomeIcon className="h-4 w-4" />,
     page: <Dashboard />,
   },

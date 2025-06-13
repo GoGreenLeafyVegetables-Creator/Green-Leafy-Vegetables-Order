@@ -6,8 +6,16 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect authenticated users to dashboard
-    navigate("/dashboard");
+    // Check if user is authenticated
+    const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+    
+    if (isAuthenticated) {
+      // Redirect authenticated users to dashboard
+      navigate("/dashboard");
+    } else {
+      // Redirect non-authenticated users to login
+      navigate("/login");
+    }
   }, [navigate]);
 
   return (

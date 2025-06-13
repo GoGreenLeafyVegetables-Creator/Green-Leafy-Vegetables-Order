@@ -10,6 +10,7 @@ import CustomerOrderPage from "./pages/CustomerOrderPage";
 import CustomerPublicPage from "./pages/CustomerPublicPage";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,9 @@ const App = () => (
           {/* Protected admin routes with layout */}
           <Route path="/" element={<ProtectedRoute />}>
             <Route path="/" element={<Layout />}>
+              {/* Root path redirects to dashboard */}
+              <Route index element={<Dashboard />} />
+              
               {navItems.map(({ to, page }) => {
                 // Convert absolute paths to relative paths for nested routing
                 const relativePath = to === "/" ? "" : to.startsWith("/") ? to.slice(1) : to;
