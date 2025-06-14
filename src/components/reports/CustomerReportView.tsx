@@ -33,6 +33,25 @@ const CustomerReportView: React.FC<CustomerReportViewProps> = ({ orders, custome
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     
+    // Get order items details for each order
+    const getOrderItemsHtml = (order: Order) => {
+      if (!order.order_items || order.order_items.length === 0) {
+        return '<tr><td colspan="4" style="text-align: center; color: #666;">No items found</td></tr>';
+      }
+      
+      return order.order_items.map(item => {
+        const vegetable = vegetables.find(v => v.id === item.vegetable_id);
+        return `
+          <tr>
+            <td>${vegetable?.name || 'Unknown Vegetable'}</td>
+            <td>${item.quantity} ${vegetable?.unit || 'units'}</td>
+            <td>₹${item.unit_price.toFixed(2)}</td>
+            <td>₹${item.total_price.toFixed(2)}</td>
+          </tr>
+        `;
+      }).join('');
+    };
+    
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -41,22 +60,31 @@ const CustomerReportView: React.FC<CustomerReportViewProps> = ({ orders, custome
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { text-align: center; border-bottom: 2px solid #22c55e; padding-bottom: 20px; margin-bottom: 30px; }
-            .company-name { color: #22c55e; font-size: 24px; font-weight: bold; }
+            .logo { width: 80px; height: 80px; margin: 0 auto 10px auto; display: block; border-radius: 8px; }
+            .company-name { color: #22c55e; font-size: 24px; font-weight: bold; margin-bottom: 5px; }
             .customer-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
             .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
             .summary-card { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
             .summary-card h3 { margin: 0 0 10px 0; color: #333; }
             .summary-card .value { font-size: 20px; font-weight: bold; color: #22c55e; }
+            .orders-section { margin: 30px 0; }
+            .order-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 20px; padding: 15px; }
+            .order-header { background: #f3f4f6; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+            .order-items-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            .order-items-table th, .order-items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            .order-items-table th { background-color: #f8f9fa; font-weight: bold; }
             .orders-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
             .orders-table th, .orders-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
             .orders-table th { background-color: #f2f2f2; }
             .balance-due { color: #dc2626; font-weight: bold; }
             .balance-advance { color: #059669; font-weight: bold; }
+            .order-total { font-weight: bold; color: #22c55e; }
             @media print { body { margin: 0; } }
           </style>
         </head>
         <body>
           <div class="header">
+            <img src="/lovable-uploads/6b34b46f-d989-4539-ae7d-13e70d1fd5df.png" alt="Go Green Leafy Vegetables Logo" class="logo" />
             <div class="company-name">GO GREEN LEAFY VEGETABLES</div>
             <div>Customer Business Report</div>
           </div>
@@ -100,43 +128,51 @@ const CustomerReportView: React.FC<CustomerReportViewProps> = ({ orders, custome
             </div>
           </div>
           
-          <h3>Order Details</h3>
-          <table class="orders-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                ${!customer ? '<th>Customer</th>' : ''}
-                <th>Order ID</th>
-                <th>Total Amount</th>
-                <th>Paid Amount</th>
-                <th>Balance</th>
-                <th>Payment Method</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${customerOrders.map(order => {
-                const orderCustomer = customers.find(c => c.id === order.customer_id);
-                return `
-                  <tr>
-                    <td>${format(new Date(order.order_date), "dd/MM/yyyy")}</td>
-                    ${!customer ? `<td>${orderCustomer?.name || 'Unknown'}</td>` : ''}
-                    <td>${order.id.substring(0, 8)}</td>
-                    <td>₹${order.total_amount.toFixed(2)}</td>
-                    <td>₹${order.paid_amount.toFixed(2)}</td>
-                    <td class="${order.balance_amount > 0 ? 'balance-due' : order.balance_amount < 0 ? 'balance-advance' : ''}">
-                      ₹${order.balance_amount.toFixed(2)}
-                    </td>
-                    <td style="text-transform: capitalize;">${order.payment_method || 'cash'}</td>
-                    <td style="text-transform: capitalize;">${order.payment_status}</td>
-                  </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
+          <div class="orders-section">
+            <h3>Detailed Order Information</h3>
+            ${customerOrders.map(order => {
+              const orderCustomer = customers.find(c => c.id === order.customer_id);
+              return `
+                <div class="order-card">
+                  <div class="order-header">
+                    <strong>Order #${order.id.substring(0, 8)}</strong> - 
+                    ${format(new Date(order.order_date), "dd/MM/yyyy")}
+                    ${!customer ? ` - ${orderCustomer?.name || 'Unknown Customer'}` : ''}
+                  </div>
+                  
+                  <table class="order-items-table">
+                    <thead>
+                      <tr>
+                        <th>Vegetable</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${getOrderItemsHtml(order)}
+                    </tbody>
+                  </table>
+                  
+                  <div style="margin-top: 15px; text-align: right;">
+                    <p><strong>Total Amount:</strong> <span class="order-total">₹${order.total_amount.toFixed(2)}</span></p>
+                    <p><strong>Paid Amount:</strong> ₹${order.paid_amount.toFixed(2)}</p>
+                    <p><strong>Balance:</strong> 
+                      <span class="${order.balance_amount > 0 ? 'balance-due' : order.balance_amount < 0 ? 'balance-advance' : ''}">
+                        ₹${order.balance_amount.toFixed(2)}
+                      </span>
+                    </p>
+                    <p><strong>Payment Method:</strong> ${(order.payment_method || 'cash').toUpperCase()}</p>
+                    <p><strong>Status:</strong> ${(order.payment_status || 'pending').toUpperCase()}</p>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
           
           <div style="margin-top: 40px; font-size: 12px; color: #666; text-align: center;">
-            Generated by GO GREEN LEAFY VEGETABLES Management System
+            Generated by GO GREEN LEAFY VEGETABLES Management System<br>
+            Report Date: ${new Date().toLocaleString()}
           </div>
         </body>
       </html>
