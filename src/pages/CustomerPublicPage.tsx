@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -103,7 +102,14 @@ const CustomerPublicPage = () => {
         {/* Header */}
         <Card className="bg-green-600 text-white">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">GO GREEN LEAFY VEGETABLES</CardTitle>
+            <div className="flex items-center justify-center mb-2">
+              <img 
+                src="/lovable-uploads/7d90b24c-ea23-4583-821b-cd6b4aa466f9.png" 
+                alt="Lord Ganesha - Go Green Leafy Vegetables Logo" 
+                className="h-12 w-12 mr-3"
+              />
+              <CardTitle className="text-2xl">GO GREEN LEAFY VEGETABLES</CardTitle>
+            </div>
             <p className="text-green-100">Customer Dashboard</p>
           </CardHeader>
         </Card>
