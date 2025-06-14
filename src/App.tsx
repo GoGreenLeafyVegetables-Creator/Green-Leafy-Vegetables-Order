@@ -8,6 +8,7 @@ import { navItems } from "./nav-items";
 import Layout from "./components/layout/Layout";
 import CustomerOrderPage from "./pages/CustomerOrderPage";
 import CustomerPublicPage from "./pages/CustomerPublicPage";
+import CustomerOrderPageSimple from "./pages/CustomerOrderPageSimple";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
@@ -26,6 +27,9 @@ const App = () => (
           
           {/* Customer ordering app route - no layout */}
           <Route path="/order/:qrCode" element={<CustomerOrderPage />} />
+          
+          {/* Simple customer order page - no layout */}
+          <Route path="/simple-order/:qrCode" element={<CustomerOrderPageSimple />} />
           
           {/* Customer public page route - no layout */}
           <Route path="/customer/:qrCode" element={<CustomerPublicPage />} />

@@ -65,7 +65,13 @@ const LoginForm = () => {
     <div className="flex justify-center items-center min-h-screen p-4 bg-gradient-to-br from-green-50 to-emerald-100">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 text-6xl">🕉️</div>
+          <div className="mx-auto mb-4">
+            <img 
+              src="/lovable-uploads/fdef065f-1d22-45a1-ae10-d111fc8d6ea2.png" 
+              alt="Lord Ganesha" 
+              className="h-20 w-auto mx-auto"
+            />
+          </div>
           <CardTitle className="text-2xl text-primary font-bold">
             Go Green Leafy Vegetables
           </CardTitle>

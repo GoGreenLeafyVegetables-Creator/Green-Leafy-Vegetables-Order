@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Customer } from "@/types/customer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Edit, Trash2, Settings, QrCode, Plus } from "lucide-react";
+import { Search, Edit, Trash2, Settings, QrCode, Plus, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -33,6 +33,11 @@ const CustomerList: React.FC<CustomerListProps> = ({
       value?.toString().toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
+
+  const handleOpenCustomerOrderPage = (customer: Customer) => {
+    const url = `/simple-order/${customer.qr_code}`;
+    window.open(url, '_blank');
+  };
 
   return (
     <Card className="w-full">
@@ -82,6 +87,10 @@ const CustomerList: React.FC<CustomerListProps> = ({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-background border">
+                          <DropdownMenuItem onClick={() => handleOpenCustomerOrderPage(customer)}>
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Customer Order Page
+                          </DropdownMenuItem>
                           {onAddOrder && (
                             <DropdownMenuItem onClick={() => onAddOrder(customer)}>
                               <Plus className="h-4 w-4 mr-2" />
