@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -46,7 +45,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
       total_price: 0
     }))
   );
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'mixed'>(
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'mixed' | 'adjustment'>(
     initialData?.payment_method || 'cash'
   );
   const [paidAmount, setPaidAmount] = useState<number>(initialData?.paid_amount || 0);
@@ -272,7 +271,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Payment Method</Label>
-                <Select value={paymentMethod} onValueChange={(value: 'cash' | 'upi' | 'mixed') => setPaymentMethod(value)}>
+                <Select value={paymentMethod} onValueChange={(value: 'cash' | 'upi' | 'mixed' | 'adjustment') => setPaymentMethod(value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -280,6 +279,7 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     <SelectItem value="cash">Cash</SelectItem>
                     <SelectItem value="upi">PhonePe UPI</SelectItem>
                     <SelectItem value="mixed">Mixed (Cash + UPI)</SelectItem>
+                    <SelectItem value="adjustment">Adjustment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
