@@ -1,14 +1,16 @@
 
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Package, IndianRupee, Phone, MapPin, Store } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Package, IndianRupee, Phone, MapPin, Store, ShoppingCart } from "lucide-react";
 
 const CustomerPublicPage = () => {
   const { qrCode } = useParams<{ qrCode: string }>();
+  const navigate = useNavigate();
 
   const { data: customer, isLoading: customerLoading } = useQuery({
     queryKey: ['customer-public', qrCode],
@@ -91,6 +93,10 @@ const CustomerPublicPage = () => {
     return <Badge className="bg-blue-500">₹{Math.abs(balance).toFixed(2)} Advance</Badge>;
   };
 
+  const handlePlaceOrder = () => {
+    navigate(`/simple-order/${qrCode}`);
+  };
+
   return (
     <div className="min-h-screen bg-green-50 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -105,7 +111,16 @@ const CustomerPublicPage = () => {
         {/* Customer Info */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">{customer.name}</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-xl">{customer.name}</CardTitle>
+              <Button 
+                onClick={handlePlaceOrder}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Place New Order
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3">
@@ -126,6 +141,25 @@ const CustomerPublicPage = () => {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Order Action */}
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="text-center p-6">
+            <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-green-600" />
+            <h3 className="text-lg font-semibold mb-2">Need to Order?</h3>
+            <p className="text-muted-foreground mb-4">
+              Click below to place your vegetable order quickly and easily
+            </p>
+            <Button 
+              onClick={handlePlaceOrder}
+              size="lg"
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <ShoppingCart className="h-5 w-5 mr-2" />
+              Place Order Now
+            </Button>
           </CardContent>
         </Card>
 

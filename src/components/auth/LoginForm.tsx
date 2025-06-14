@@ -62,8 +62,8 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-4 bg-gradient-to-br from-green-50 to-emerald-100">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="flex justify-center items-center min-h-screen p-4">
+      <Card className="w-full max-w-md shadow-2xl backdrop-blur-sm bg-white/95">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
             <img 
