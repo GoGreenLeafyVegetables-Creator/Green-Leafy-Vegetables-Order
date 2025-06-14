@@ -67,7 +67,7 @@ const LoginForm = () => {
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
             <img 
-              src="/lovable-uploads/fdef065f-1d22-45a1-ae10-d111fc8d6ea2.png" 
+              src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" 
               alt="Lord Ganesha" 
               className="h-20 w-auto mx-auto"
             />

@@ -14,8 +14,8 @@ const Navbar = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <img 
-                src="/lovable-uploads/6b34b46f-d989-4539-ae7d-13e70d1fd5df.png" 
-                alt="Go Green Leafy Vegetables Logo" 
+                src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" 
+                alt="Lord Ganesha - Go Green Leafy Vegetables Logo" 
                 className="h-10 w-10 mr-3"
               />
               <Link to="/" className="text-xl font-bold text-green-600">

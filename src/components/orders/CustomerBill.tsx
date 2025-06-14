@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -95,7 +96,7 @@ const CustomerBill: React.FC<CustomerBillProps> = ({
         </head>
         <body>
           <div class="header">
-            <img src="/lovable-uploads/6b34b46f-d989-4539-ae7d-13e70d1fd5df.png" alt="Logo" class="logo" />
+            <img src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" alt="Lord Ganesha Logo" class="logo" />
             <div class="company-name">GO GREEN LEAFY VEGETABLES</div>
             <div>Customer Bill</div>
           </div>
