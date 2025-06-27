@@ -6,7 +6,7 @@ const Login = () => {
   return (
     <div 
       className="min-h-screen bg-cover bg-center bg-no-repeat relative"
-      style={{ backgroundImage: 'url(/lovable-uploads/26f1cf98-2d05-42aa-9b32-aa8c25b6dbba.png)' }}
+      style={{ backgroundImage: 'url(https://i.ibb.co/zhWqkYSg/palak.jpg)' }}
     >
       {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-black bg-opacity-40"></div>
