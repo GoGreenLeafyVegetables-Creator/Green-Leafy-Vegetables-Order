@@ -87,7 +87,10 @@ const Dashboard = () => {
       
       <Dialog open={!!viewingOrder} onOpenChange={() => setViewingOrder(null)}>
         {viewingOrder && (
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-3xl" aria-describedby="order-details-description">
+            <div className="sr-only" id="order-details-description">
+              Order details for viewing and managing order information
+            </div>
             <OrderDetails
               order={viewingOrder}
               customer={customers.find(c => c.id === viewingOrder.customer_id)}

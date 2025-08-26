@@ -12,6 +12,7 @@ import CustomerOrderPageSimple from "./pages/CustomerOrderPageSimple";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
+import OrderFormPage from "./pages/OrderFormPage";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,9 @@ const App = () => (
             <Route path="/" element={<Layout />}>
               {/* Root path redirects to dashboard */}
               <Route index element={<Dashboard />} />
+              
+              {/* Order edit route */}
+              <Route path="orders/edit/:id" element={<OrderFormPage />} />
               
               {navItems.map(({ to, page }) => {
                 // Convert absolute paths to relative paths for nested routing
