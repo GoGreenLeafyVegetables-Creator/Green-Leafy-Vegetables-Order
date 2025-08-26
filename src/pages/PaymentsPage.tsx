@@ -17,7 +17,7 @@ const PaymentsPage = () => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
   const filteredOrders = orders.filter(order => {
-    const customer = order.customers?.[0];
+    const customer = (order as any).customers?.[0];
     const searchLower = searchTerm.toLowerCase();
     return (
       customer?.name?.toLowerCase().includes(searchLower) ||
@@ -39,16 +39,20 @@ const PaymentsPage = () => {
   const handlePaymentUpdate = async (orderId: string, updates: {
     paid_amount: number;
     payment_method: string;
-    payment_status: 'pending' | 'partial' | 'paid';
-    balance_amount: number;
+    payment_status: string;
   }) => {
     try {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const balance_amount = order.total_amount - updates.paid_amount;
+
       await updateOrder.mutateAsync({
         id: orderId,
         paid_amount: updates.paid_amount,
         payment_method: updates.payment_method as 'cash' | 'upi' | 'mixed' | 'adjustment',
-        payment_status: updates.payment_status,
-        balance_amount: updates.balance_amount
+        payment_status: updates.payment_status as 'pending' | 'partial' | 'paid',
+        balance_amount: balance_amount
       });
       setEditingOrder(null);
     } catch (error) {
@@ -81,7 +85,7 @@ const PaymentsPage = () => {
 
       <div className="grid gap-4">
         {filteredOrders.map((order) => {
-          const customer = order.customers?.[0];
+          const customer = (order as any).customers?.[0];
           return (
             <Card key={order.id}>
               <CardContent className="p-6">
@@ -161,8 +165,10 @@ const PaymentsPage = () => {
       {editingOrder && (
         <PaymentEditDialog
           order={editingOrder}
+          customer={(editingOrder as any).customers?.[0] || null}
+          isOpen={!!editingOrder}
+          onClose={() => setEditingOrder(null)}
           onSave={handlePaymentUpdate}
-          onCancel={() => setEditingOrder(null)}
         />
       )}
     </div>
