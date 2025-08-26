@@ -2,14 +2,18 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCustomers, useVegetables } from "@/hooks/use-supabase-data";
+import { useCustomers, useVegetables, useCreateCustomerOrder } from "@/hooks/use-supabase-data";
+import { useToast } from "@/components/ui/use-toast";
 import CustomerOrderForm from "./CustomerOrderForm";
 import { Store, Phone, MapPin } from "lucide-react";
+import { Order } from "@/types/order";
 
 const CustomerOrderApp = () => {
   const { qrCode } = useParams<{ qrCode: string }>();
   const { data: customers = [], isLoading: customersLoading } = useCustomers();
   const { data: vegetables = [], isLoading: vegetablesLoading } = useVegetables();
+  const createOrder = useCreateCustomerOrder();
+  const { toast } = useToast();
 
   if (customersLoading || vegetablesLoading) {
     return (
@@ -41,12 +45,26 @@ const CustomerOrderApp = () => {
     );
   }
 
-  const handleOrderSubmit = async (orderData: any) => {
+  const handleOrderSubmit = async (orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      console.log('Order submitted:', orderData);
-      // Handle order submission logic here
+      const { order_items, ...order } = orderData;
+      
+      await createOrder.mutateAsync({
+        order,
+        items: order_items || []
+      });
+
+      toast({
+        title: "Order Placed Successfully!",
+        description: "Your order has been submitted and will be processed soon.",
+      });
     } catch (error) {
       console.error('Error submitting order:', error);
+      toast({
+        variant: "destructive",
+        title: "Order Failed",
+        description: "There was an error placing your order. Please try again.",
+      });
     }
   };
 
