@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,12 +46,7 @@ const CustomerOrderApp = () => {
 
   const handleOrderSubmit = async (orderData: Omit<Order, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { order_items, ...order } = orderData;
-      
-      await createOrder.mutateAsync({
-        order,
-        items: order_items || []
-      });
+      await createOrder.mutateAsync(orderData);
 
       toast({
         title: "Order Placed Successfully!",
