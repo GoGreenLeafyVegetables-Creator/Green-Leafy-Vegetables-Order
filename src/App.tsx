@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,7 +13,8 @@ import CustomerOrderPageSimple from "./pages/CustomerOrderPageSimple";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
-import OrderFormPage from "./pages/OrderFormPage";
+// Lazy load OrderFormPage to avoid potential circular dependencies
+const OrderFormPage = React.lazy(() => import("./pages/OrderFormPage"));
 
 const queryClient = new QueryClient();
 
@@ -42,7 +44,14 @@ const App = () => (
               <Route index element={<Dashboard />} />
               
               {/* Order edit route */}
-              <Route path="orders/edit/:id" element={<OrderFormPage />} />
+              <Route 
+                path="orders/edit/:id" 
+                element={
+                  <React.Suspense fallback={<div>Loading...</div>}>
+                    <OrderFormPage />
+                  </React.Suspense>
+                } 
+              />
               
               {navItems.map(({ to, page }) => {
                 // Convert absolute paths to relative paths for nested routing
