@@ -4,16 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Customer } from "@/types/customer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Edit, Trash2, Settings, QrCode, Plus, ExternalLink } from "lucide-react";
+import { Search, Edit, Trash2, Settings, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface CustomerListProps {
   customers: Customer[];
   onEdit: (customer: Customer) => void;
   onDelete: (customerId: string) => void;
   onManage: (customer: Customer) => void;
-  onAddOrder?: (customer: Customer) => void;
+  onAddOrder: (customer: Customer) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
@@ -29,15 +28,10 @@ const CustomerList: React.FC<CustomerListProps> = ({
 }) => {
   // Filter customers based on search query
   const filteredCustomers = customers.filter((customer) =>
-    Object.values(customer).some((value) =>
-      value?.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.mobile.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (customer.shop_name && customer.shop_name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
-
-  const handleOpenCustomerOrderPage = (customer: Customer) => {
-    const url = `/simple-order/${customer.qr_code}`;
-    window.open(url, '_blank');
-  };
 
   return (
     <Card className="w-full">
@@ -60,57 +54,77 @@ const CustomerList: React.FC<CustomerListProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Photo</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Mobile</TableHead>
-                  <TableHead className="hidden md:table-cell">Shop Name</TableHead>
-                  <TableHead className="hidden md:table-cell">QR Code</TableHead>
+                  <TableHead className="hidden md:table-cell">Shop</TableHead>
+                  <TableHead className="hidden md:table-cell">Location</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCustomers.map((customer) => (
                   <TableRow key={customer.id}>
+                    <TableCell>
+                      {customer.photo_url ? (
+                        <img
+                          src={customer.photo_url}
+                          alt={customer.name}
+                          className="w-12 h-12 object-cover rounded-full"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xs text-gray-500">
+                          {customer.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{customer.name}</TableCell>
                     <TableCell>{customer.mobile}</TableCell>
-                    <TableCell className="hidden md:table-cell">{customer.shop_name || "-"}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                      <div className="flex items-center gap-1">
-                        <QrCode className="h-3 w-3" />
-                        <span className="text-xs">{customer.qr_code}</span>
-                      </div>
+                      {customer.shop_name || "-"}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {customer.location || "-"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            Actions
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-background border">
-                          <DropdownMenuItem onClick={() => handleOpenCustomerOrderPage(customer)}>
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            Customer Order Page
-                          </DropdownMenuItem>
-                          {onAddOrder && (
-                            <DropdownMenuItem onClick={() => onAddOrder(customer)}>
-                              <Plus className="h-4 w-4 mr-2" />
-                              Add Order
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => onManage(customer)}>
-                            <Settings className="h-4 w-4 mr-2" />
-                            Manage
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onEdit(customer)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onDelete(customer.id)}>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onAddOrder(customer)}
+                          title="Add Order"
+                        >
+                          <ShoppingCart className="h-4 w-4" />
+                          <span className="sr-only">Add Order</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onManage(customer)}
+                          title="Manage"
+                        >
+                          <Settings className="h-4 w-4" />
+                          <span className="sr-only">Manage</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(customer)}
+                          title="Edit"
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDelete(customer.id)}
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

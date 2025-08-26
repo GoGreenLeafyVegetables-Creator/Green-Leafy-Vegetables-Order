@@ -38,10 +38,13 @@ const OrderList: React.FC<OrderListProps> = ({
     const customer = customers.find(c => c.id === order.customer_id);
     const customerName = customer?.name || "";
     const date = format(new Date(order.order_date), "PPP");
+    const orderNumber = order.id.slice(-8).toUpperCase(); // Last 8 characters as order number
     
     const matchesSearch = 
       customerName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      date.toLowerCase().includes(searchQuery.toLowerCase());
+      date.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.id.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesCustomerFilter = !selectedCustomerId || selectedCustomerId === "all" || order.customer_id === selectedCustomerId;
     
@@ -57,7 +60,7 @@ const OrderList: React.FC<OrderListProps> = ({
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search orders..."
+              placeholder="Search by customer name, date, or order number..."
               className="pl-8"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -89,6 +92,7 @@ const OrderList: React.FC<OrderListProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Order #</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead className="hidden md:table-cell">Items</TableHead>
@@ -99,9 +103,13 @@ const OrderList: React.FC<OrderListProps> = ({
               <TableBody>
                 {filteredOrders.map((order) => {
                   const customer = customers.find(c => c.id === order.customer_id);
+                  const orderNumber = order.id.slice(-8).toUpperCase();
                   
                   return (
                     <TableRow key={order.id}>
+                      <TableCell className="font-mono text-sm">
+                        #{orderNumber}
+                      </TableCell>
                       <TableCell>
                         {format(new Date(order.order_date), "dd/MM/yyyy")}
                       </TableCell>
@@ -120,6 +128,7 @@ const OrderList: React.FC<OrderListProps> = ({
                             variant="ghost"
                             size="icon"
                             onClick={() => onView(order)}
+                            title="View Details"
                           >
                             <Eye className="h-4 w-4" />
                             <span className="sr-only">View</span>
@@ -128,6 +137,7 @@ const OrderList: React.FC<OrderListProps> = ({
                             variant="ghost"
                             size="icon"
                             onClick={() => onEdit(order)}
+                            title="Edit Order"
                           >
                             <Edit className="h-4 w-4" />
                             <span className="sr-only">Edit</span>
@@ -136,6 +146,7 @@ const OrderList: React.FC<OrderListProps> = ({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDelete(order.id)}
+                            title="Delete Order"
                           >
                             <Trash2 className="h-4 w-4" />
                             <span className="sr-only">Delete</span>

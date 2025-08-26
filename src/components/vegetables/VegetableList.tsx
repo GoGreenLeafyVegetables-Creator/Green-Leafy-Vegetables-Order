@@ -48,6 +48,7 @@ const VegetableList: React.FC<VegetableListProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Photo</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Unit</TableHead>
@@ -57,6 +58,19 @@ const VegetableList: React.FC<VegetableListProps> = ({
               <TableBody>
                 {filteredVegetables.map((vegetable) => (
                   <TableRow key={vegetable.id}>
+                    <TableCell>
+                      {vegetable.photo_url ? (
+                        <img
+                          src={vegetable.photo_url}
+                          alt={vegetable.name}
+                          className="w-12 h-12 object-cover rounded-md"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center text-xs text-gray-500">
+                          No photo
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{vegetable.name}</TableCell>
                     <TableCell>₹{vegetable.price.toFixed(2)}</TableCell>
                     <TableCell>{vegetable.unit}</TableCell>

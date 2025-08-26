@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Customer } from "@/types/customer";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import PhotoUpload from "@/components/ui/photo-upload";
 
 interface CustomerFormProps {
   onSave: (customer: Omit<Customer, 'id'>) => void;
@@ -21,12 +22,14 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, onCancel, initialDa
           mobile: initialData.mobile,
           shop_name: initialData.shop_name,
           location: initialData.location,
+          photo_url: initialData.photo_url,
         }
       : {
           name: "",
           mobile: "",
           shop_name: "",
           location: "",
+          photo_url: "",
         }
   );
 
@@ -35,6 +38,10 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, onCancel, initialDa
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoChange = (photoUrl: string | null) => {
+    setFormData((prev) => ({ ...prev, photo_url: photoUrl || "" }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,6 +72,13 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, onCancel, initialDa
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          <PhotoUpload
+            currentPhotoUrl={formData.photo_url || undefined}
+            onPhotoChange={handlePhotoChange}
+            bucket="customer-photos"
+            folder="customers"
+          />
+          
           <div className="space-y-2">
             <Label htmlFor="name">Name *</Label>
             <Input

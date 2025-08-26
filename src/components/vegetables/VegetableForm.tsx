@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Vegetable } from "@/types/vegetable";
+import PhotoUpload from "@/components/ui/photo-upload";
 
 interface VegetableFormProps {
   onSave: (vegetable: Omit<Vegetable, 'id'>) => void;
@@ -21,11 +22,13 @@ const VegetableForm: React.FC<VegetableFormProps> = ({ onSave, onCancel, initial
           name: initialData.name,
           price: initialData.price,
           unit: initialData.unit,
+          photo_url: initialData.photo_url,
         }
       : {
           name: "",
           price: 0,
           unit: "bunch",
+          photo_url: "",
         }
   );
 
@@ -41,6 +44,10 @@ const VegetableForm: React.FC<VegetableFormProps> = ({ onSave, onCancel, initial
 
   const handleUnitChange = (value: string) => {
     setFormData((prev) => ({ ...prev, unit: value }));
+  };
+
+  const handlePhotoChange = (photoUrl: string | null) => {
+    setFormData((prev) => ({ ...prev, photo_url: photoUrl || "" }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -71,6 +78,13 @@ const VegetableForm: React.FC<VegetableFormProps> = ({ onSave, onCancel, initial
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          <PhotoUpload
+            currentPhotoUrl={formData.photo_url || undefined}
+            onPhotoChange={handlePhotoChange}
+            bucket="vegetable-photos"
+            folder="vegetables"
+          />
+          
           <div className="space-y-2">
             <Label htmlFor="name">Name *</Label>
             <Input

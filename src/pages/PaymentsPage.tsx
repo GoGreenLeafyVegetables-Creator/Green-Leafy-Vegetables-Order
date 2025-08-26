@@ -3,20 +3,25 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Calendar } from "lucide-react";
-import { useOrders, useCustomers } from "@/hooks/use-supabase-data";
+import { Search, Edit } from "lucide-react";
+import { useOrders, useCustomers, useUpdateOrder } from "@/hooks/use-supabase-data";
+import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
+import PaymentEditDialog from "@/components/payments/PaymentEditDialog";
+import { Order } from "@/types/order";
 
 const PaymentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("all");
   const [filterType, setFilterType] = useState("all");
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
   const { data: orders = [], isLoading: ordersLoading } = useOrders();
   const { data: customers = [], isLoading: customersLoading } = useCustomers();
+  const updateOrder = useUpdateOrder();
+  const { toast } = useToast();
 
   // Filter orders based on search and filters
   const filteredOrders = orders.filter((order) => {
@@ -45,6 +50,33 @@ const PaymentsPage = () => {
   const totalAdvance = orders.reduce((sum, order) => sum + Math.abs(Math.min(0, order.balance_amount)), 0);
   const totalPaid = orders.reduce((sum, order) => sum + order.paid_amount, 0);
 
+  const handleEditPayment = (order: Order) => {
+    setEditingOrder(order);
+  };
+
+  const handleSavePayment = async (orderId: string, updates: { paid_amount: number; payment_status: string; payment_method: string }) => {
+    try {
+      const balanceAmount = filteredOrders.find(o => o.id === orderId)?.total_amount! - updates.paid_amount;
+      
+      await updateOrder.mutateAsync({
+        id: orderId,
+        ...updates,
+        balance_amount: balanceAmount,
+      });
+
+      toast({
+        title: "Payment Updated",
+        description: "Payment has been updated successfully",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update payment",
+      });
+    }
+  };
+
   if (ordersLoading || customersLoading) {
     return (
       <div className="space-y-6">
@@ -58,6 +90,8 @@ const PaymentsPage = () => {
       </div>
     );
   }
+
+  const editingCustomer = editingOrder ? customers.find(c => c.id === editingOrder.customer_id) : null;
 
   return (
     <div className="space-y-6">
@@ -150,6 +184,7 @@ const PaymentsPage = () => {
                     <TableHead className="text-right">Paid Amount</TableHead>
                     <TableHead className="text-right">Balance</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -188,6 +223,17 @@ const PaymentsPage = () => {
                              order.payment_status === 'partial' ? 'Partial' : 'Pending'}
                           </span>
                         </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditPayment(order)}
+                            title="Edit Payment"
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit Payment</span>
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
@@ -203,6 +249,14 @@ const PaymentsPage = () => {
           )}
         </CardContent>
       </Card>
+
+      <PaymentEditDialog
+        order={editingOrder}
+        customer={editingCustomer || null}
+        isOpen={!!editingOrder}
+        onClose={() => setEditingOrder(null)}
+        onSave={handleSavePayment}
+      />
     </div>
   );
 };
