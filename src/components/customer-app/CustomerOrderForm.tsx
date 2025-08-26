@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Customer } from "@/types/customer";
 import { Vegetable } from "@/types/vegetable";
 import { Order, OrderItem } from "@/types/order";
-import { ShoppingCart, Plus, Minus, Store, Phone, MapPin } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Store, Phone, MapPin, Edit2, Check, X } from "lucide-react";
 
 interface CartItem {
   vegetable_id: string;
@@ -32,18 +32,22 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({
 }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingPrice, setEditingPrice] = useState<string | null>(null);
+  const [tempPrice, setTempPrice] = useState<number>(0);
 
-  const addToCart = (vegetable: Vegetable, quantity: number) => {
+  const addToCart = (vegetable: Vegetable, quantity: number, customPrice?: number) => {
     if (quantity <= 0) return;
     
     const existingItemIndex = cart.findIndex(item => item.vegetable_id === vegetable.id);
-    const total_price = quantity * vegetable.price;
+    const unitPrice = customPrice || vegetable.price;
+    const total_price = quantity * unitPrice;
     
     if (existingItemIndex >= 0) {
       const updatedCart = [...cart];
       updatedCart[existingItemIndex] = {
         ...updatedCart[existingItemIndex],
         quantity,
+        unit_price: unitPrice,
         total_price
       };
       setCart(updatedCart);
@@ -52,7 +56,7 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({
         vegetable_id: vegetable.id,
         name: vegetable.name,
         unit: vegetable.unit,
-        unit_price: vegetable.price,
+        unit_price: unitPrice,
         quantity,
         total_price
       }]);
@@ -72,6 +76,14 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({
     ));
   };
 
+  const updatePrice = (vegetableId: string, newPrice: number) => {
+    setCart(cart.map(item => 
+      item.vegetable_id === vegetableId 
+        ? { ...item, unit_price: newPrice, total_price: item.quantity * newPrice }
+        : item
+    ));
+  };
+
   const removeFromCart = (vegetableId: string) => {
     setCart(cart.filter(item => item.vegetable_id !== vegetableId));
   };
@@ -79,6 +91,28 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({
   const getCartItemQuantity = (vegetableId: string) => {
     const item = cart.find(item => item.vegetable_id === vegetableId);
     return item ? item.quantity : 0;
+  };
+
+  const getCartItemPrice = (vegetableId: string) => {
+    const item = cart.find(item => item.vegetable_id === vegetableId);
+    const vegetable = vegetables.find(v => v.id === vegetableId);
+    return item ? item.unit_price : vegetable?.price || 0;
+  };
+
+  const handlePriceEdit = (vegetableId: string, currentPrice: number) => {
+    setEditingPrice(vegetableId);
+    setTempPrice(currentPrice);
+  };
+
+  const handlePriceUpdate = (vegetableId: string) => {
+    updatePrice(vegetableId, tempPrice);
+    setEditingPrice(null);
+    setTempPrice(0);
+  };
+
+  const handlePriceCancelEdit = () => {
+    setEditingPrice(null);
+    setTempPrice(0);
   };
 
   const totalAmount = cart.reduce((sum, item) => sum + item.total_price, 0);
@@ -158,6 +192,9 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({
                 <div className="grid gap-4 sm:grid-cols-2">
                   {vegetables.map((vegetable) => {
                     const cartQuantity = getCartItemQuantity(vegetable.id);
+                    const currentPrice = getCartItemPrice(vegetable.id);
+                    const isEditingThisPrice = editingPrice === vegetable.id;
+                    
                     return (
                       <div key={vegetable.id} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-3">
@@ -165,9 +202,49 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({
                             <h3 className="font-medium">{vegetable.name}</h3>
                             <p className="text-sm text-gray-600">{vegetable.unit}</p>
                           </div>
-                          <Badge variant="secondary">
-                            ₹{vegetable.price}/{vegetable.unit}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            {isEditingThisPrice ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={tempPrice}
+                                  onChange={(e) => setTempPrice(parseFloat(e.target.value) || 0)}
+                                  className="w-16 h-6 text-xs"
+                                />
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handlePriceUpdate(vegetable.id)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={handlePriceCancelEdit}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <Badge variant="secondary">
+                                  ₹{currentPrice}/{vegetable.unit}
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handlePriceEdit(vegetable.id, currentPrice)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Edit2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         
                         {cartQuantity > 0 ? (
@@ -199,7 +276,7 @@ const CustomerOrderForm: React.FC<CustomerOrderFormProps> = ({
                               onChange={(e) => {
                                 const quantity = parseFloat(e.target.value) || 0;
                                 if (quantity > 0) {
-                                  addToCart(vegetable, quantity);
+                                  addToCart(vegetable, quantity, currentPrice);
                                 }
                               }}
                             />

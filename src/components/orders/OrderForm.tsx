@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -8,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarCheck } from "lucide-react";
+import { CalendarCheck, Edit2, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Customer } from "@/types/customer";
 import { Vegetable } from "@/types/vegetable";
@@ -49,6 +50,8 @@ const OrderForm: React.FC<OrderFormProps> = ({
     initialData?.payment_method || 'cash'
   );
   const [paidAmount, setPaidAmount] = useState<number>(initialData?.paid_amount || 0);
+  const [editingPrice, setEditingPrice] = useState<string | null>(null);
+  const [tempPrice, setTempPrice] = useState<number>(0);
 
   const { toast } = useToast();
 
@@ -64,13 +67,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
     setItems(prevItems =>
       prevItems.map(item => {
         if (item.vegetable_id === vegetableId) {
-          const vegetable = vegetables.find(v => v.id === vegetableId);
-          const unitPrice = vegetable?.price || 0;
           return { 
             ...item, 
             quantity: newQuantity,
-            unit_price: unitPrice,
-            total_price: newQuantity * unitPrice
+            total_price: newQuantity * item.unit_price
           };
         }
         return item;
@@ -78,11 +78,35 @@ const OrderForm: React.FC<OrderFormProps> = ({
     );
   };
 
+  const handlePriceEdit = (vegetableId: string, currentPrice: number) => {
+    setEditingPrice(vegetableId);
+    setTempPrice(currentPrice);
+  };
+
+  const handlePriceUpdate = (vegetableId: string) => {
+    setItems(prevItems =>
+      prevItems.map(item => {
+        if (item.vegetable_id === vegetableId) {
+          return { 
+            ...item, 
+            unit_price: tempPrice,
+            total_price: item.quantity * tempPrice
+          };
+        }
+        return item;
+      })
+    );
+    setEditingPrice(null);
+    setTempPrice(0);
+  };
+
+  const handlePriceCancelEdit = () => {
+    setEditingPrice(null);
+    setTempPrice(0);
+  };
+
   const calculateTotal = () => {
-    return items.reduce((sum, item) => {
-      const vegetable = vegetables.find(v => v.id === item.vegetable_id);
-      return sum + (vegetable ? vegetable.price * item.quantity : 0);
-    }, 0);
+    return items.reduce((sum, item) => sum + item.total_price, 0);
   };
 
   const calculatePaymentStatus = (total: number, paid: number): 'pending' | 'partial' | 'paid' => {
@@ -235,17 +259,65 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     <TableHead>Price</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead className="text-right">Quantity</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {vegetables.map((vegetable) => {
                     const item = items.find(i => i.vegetable_id === vegetable.id);
                     const quantity = item ? item.quantity : 0;
+                    const unitPrice = item ? item.unit_price : vegetable.price;
+                    const isEditingThisPrice = editingPrice === vegetable.id;
                     
                     return (
                       <TableRow key={vegetable.id}>
                         <TableCell className="font-medium">{vegetable.name}</TableCell>
-                        <TableCell>₹{vegetable.price.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {isEditingThisPrice ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={tempPrice}
+                                  onChange={(e) => setTempPrice(parseFloat(e.target.value) || 0)}
+                                  className="w-20"
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handlePriceUpdate(vegetable.id)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={handlePriceCancelEdit}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span>₹{unitPrice.toFixed(2)}</span>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handlePriceEdit(vegetable.id, unitPrice)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Edit2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>{vegetable.unit}</TableCell>
                         <TableCell className="text-right">
                           <Input
@@ -256,6 +328,9 @@ const OrderForm: React.FC<OrderFormProps> = ({
                             value={quantity}
                             onChange={(e) => handleQuantityChange(vegetable.id, e.target.value)}
                           />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          ₹{(quantity * unitPrice).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     );
