@@ -1,11 +1,20 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { navItems } from "@/nav-items";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
 
   return (
     <nav className="bg-white border-b border-gray-200">
@@ -39,6 +48,17 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
+          </div>
+          <div className="flex items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="ml-4"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
           </div>
         </div>
       </div>
