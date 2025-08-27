@@ -10,6 +10,7 @@ import Layout from "./components/layout/Layout";
 import CustomerOrderPage from "./pages/CustomerOrderPage";
 import CustomerPublicPage from "./pages/CustomerPublicPage";
 import CustomerOrderPageSimple from "./pages/CustomerOrderPageSimple";
+import CustomerOutstandingDetailsPage from "./pages/CustomerOutstandingDetailsPage";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
@@ -52,6 +53,9 @@ const App = () => (
                   </React.Suspense>
                 } 
               />
+              
+              {/* Outstanding orders detail route */}
+              <Route path="outstanding-orders/:customerId" element={<CustomerOutstandingDetailsPage />} />
               
               {navItems.map(({ to, page }) => {
                 // Convert absolute paths to relative paths for nested routing

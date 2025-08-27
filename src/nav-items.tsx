@@ -1,75 +1,61 @@
 
-import { HomeIcon, UsersIcon, ShoppingCartIcon, PackageIcon, FileTextIcon, CreditCardIcon, SettingsIcon, DollarSignIcon } from "lucide-react";
-import Dashboard from "./pages/Dashboard";
+import { Home, Users, ShoppingCart, Package2, IndianRupee, BarChart3, Database, AlertTriangle } from "lucide-react";
+import Index from "./pages/Index";
 import CustomersPage from "./pages/CustomersPage";
 import OrdersPage from "./pages/OrdersPage";
-import OrderFormPage from "./pages/OrderFormPage";
 import VegetablesPage from "./pages/VegetablesPage";
-import ReportsPage from "./pages/ReportsPage";
 import PaymentsPage from "./pages/PaymentsPage";
-import PaymentUpdatePage from "./pages/PaymentUpdatePage";
-import CustomerBalancePage from "./pages/CustomerBalancePage";
+import ReportsPage from "./pages/ReportsPage";
 import BackupPage from "./pages/BackupPage";
+import OutstandingOrdersPage from "./pages/OutstandingOrdersPage";
 
 export const navItems = [
   {
     title: "Dashboard",
-    to: "/dashboard",
-    icon: <HomeIcon className="h-4 w-4" />,
-    page: <Dashboard />,
+    to: "/",
+    icon: <Home className="h-4 w-4" />,
+    page: <Index />,
   },
   {
     title: "Customers",
     to: "/customers",
-    icon: <UsersIcon className="h-4 w-4" />,
+    icon: <Users className="h-4 w-4" />,
     page: <CustomersPage />,
   },
   {
     title: "Orders",
     to: "/orders",
-    icon: <ShoppingCartIcon className="h-4 w-4" />,
+    icon: <ShoppingCart className="h-4 w-4" />,
     page: <OrdersPage />,
   },
   {
-    title: "New Order",
-    to: "/orders/new",
-    icon: <ShoppingCartIcon className="h-4 w-4" />,
-    page: <OrderFormPage />,
+    title: "Outstanding Orders",
+    to: "/outstanding-orders",
+    icon: <AlertTriangle className="h-4 w-4" />,
+    page: <OutstandingOrdersPage />,
   },
   {
     title: "Vegetables",
     to: "/vegetables",
-    icon: <PackageIcon className="h-4 w-4" />,
+    icon: <Package2 className="h-4 w-4" />,
     page: <VegetablesPage />,
   },
   {
     title: "Payments",
     to: "/payments",
-    icon: <CreditCardIcon className="h-4 w-4" />,
+    icon: <IndianRupee className="h-4 w-4" />,
     page: <PaymentsPage />,
-  },
-  {
-    title: "Update Payments",
-    to: "/payment-updates",
-    icon: <CreditCardIcon className="h-4 w-4" />,
-    page: <PaymentUpdatePage />,
-  },
-  {
-    title: "Customer Balance",
-    to: "/customer-balance",
-    icon: <DollarSignIcon className="h-4 w-4" />,
-    page: <CustomerBalancePage />,
   },
   {
     title: "Reports",
     to: "/reports",
-    icon: <FileTextIcon className="h-4 w-4" />,
+    icon: <BarChart3 className="h-4 w-4" />,
     page: <ReportsPage />,
   },
   {
     title: "Backup",
     to: "/backup",
-    icon: <SettingsIcon className="h-4 w-4" />,
+    icon: <Database className="h-4 w-4" />,
     page: <BackupPage />,
   },
 ];

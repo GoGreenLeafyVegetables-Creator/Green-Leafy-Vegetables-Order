@@ -15,11 +15,11 @@ const Navbar = () => {
             <div className="flex-shrink-0 flex items-center">
               <img 
                 src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" 
-                alt="Lord Ganesha - Go Green Leafy Vegetables Logo" 
+                alt="Shree Ganesha Green Leafy Vegetables Logo" 
                 className="h-10 w-10 mr-3"
               />
               <Link to="/" className="text-xl font-bold text-green-600">
-                Go Green Leafy Vegetables
+                Shree Ganesha Green Leafy Vegetables
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
