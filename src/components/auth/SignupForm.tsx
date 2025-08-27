@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ interface SignupCredentials {
 
 const SignupForm = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
   const [credentials, setCredentials] = useState<SignupCredentials>({ 
-    email: "", 
+    email: "gogreenleafyvegetables@gmail.com", // Pre-filled with your admin email
     password: "", 
     confirmPassword: "" 
   });
@@ -66,8 +67,8 @@ const SignupForm = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
         });
       } else {
         toast({
-          title: "Account created successfully",
-          description: "Please check your email to verify your account.",
+          title: "Admin account created successfully",
+          description: "You can now login with your credentials.",
         });
         onBackToLogin();
       }
@@ -111,6 +112,8 @@ const SignupForm = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
               required
               value={credentials.email}
               onChange={handleChange}
+              readOnly
+              className="bg-gray-50"
             />
           </div>
           <div className="space-y-2">
@@ -119,7 +122,7 @@ const SignupForm = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
               id="password"
               name="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="Enter: 901901SSDD##ss.."
               required
               value={credentials.password}
               onChange={handleChange}
