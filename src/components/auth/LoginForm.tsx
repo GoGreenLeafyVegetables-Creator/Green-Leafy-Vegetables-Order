@@ -6,14 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface LoginCredentials {
   email: string;
   password: string;
 }
 
-const LoginForm = ({ onShowSignup }: { onShowSignup: () => void }) => {
+const ADMIN_CREDENTIALS = { 
+  email: "gogreenleafyvegetables@gmail.com", 
+  password: "901901SSDD##ss" 
+};
+
+const LoginForm = () => {
   const [credentials, setCredentials] = useState<LoginCredentials>({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -24,38 +28,37 @@ const LoginForm = ({ onShowSignup }: { onShowSignup: () => void }) => {
     setCredentials((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password,
-      });
-
-      if (error) {
+    // Simulate API call
+    setTimeout(() => {
+      if (
+        credentials.email === ADMIN_CREDENTIALS.email && 
+        credentials.password === ADMIN_CREDENTIALS.password
+      ) {
+        // Store auth state
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("adminUser", JSON.stringify({
+          email: credentials.email,
+          name: "Go Green Leafy Vegetables Admin"
+        }));
+        toast({
+          title: "Login successful",
+          description: "Welcome to the Vegetable Order Management System",
+        });
+        // Use window.location for immediate redirect
+        window.location.href = "/dashboard";
+      } else {
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: error.message,
+          description: "Invalid email or password",
         });
-      } else if (data.user) {
-        toast({
-          title: "Login successful",
-          description: "Welcome to Shree Ganesha Green Leafy Vegetables Admin Portal",
-        });
-        navigate("/dashboard");
       }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: "An unexpected error occurred",
-      });
-    } finally {
       setIsLoading(false);
-    }
+    }, 1000);
   };
 
   return (
@@ -70,7 +73,7 @@ const LoginForm = ({ onShowSignup }: { onShowSignup: () => void }) => {
             />
           </div>
           <CardTitle className="text-2xl text-primary font-bold">
-            Shree Ganesha Green Leafy Vegetables
+            Go Green Leafy Vegetables
           </CardTitle>
           <CardDescription className="text-center">
             Admin Portal - Vegetable Order Management System
@@ -103,19 +106,11 @@ const LoginForm = ({ onShowSignup }: { onShowSignup: () => void }) => {
               />
             </div>
           </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <Button className="w-full bg-green-600 hover:bg-green-700" type="submit" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login to Admin Portal"}
-          </Button>
-          <Button 
-            type="button" 
-            variant="ghost" 
-            className="w-full text-sm" 
-            onClick={onShowSignup}
-          >
-            Need to create an admin account? Sign up
-          </Button>
-        </CardFooter>
+          <CardFooter>
+            <Button className="w-full bg-green-600 hover:bg-green-700" type="submit" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login to Admin Portal"}
+            </Button>
+          </CardFooter>
         </form>
       </Card>
     </div>
