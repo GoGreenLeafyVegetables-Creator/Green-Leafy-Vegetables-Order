@@ -1,40 +1,42 @@
 
 import React, { useEffect, useState } from "react";
-import { useNavigate, Outlet, useLocation } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 const ProtectedRoute = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
-  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const checkAuth = () => {
-      if (!isAuthenticated) {
-        // Clear any existing state and redirect to login
-        localStorage.clear();
-        navigate("/login", { replace: true });
-      } else {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
         setIsChecking(false);
+        
+        if (!session?.user) {
+          navigate("/login", { replace: true });
+        }
       }
-    };
+    );
 
-    checkAuth();
-    
-    // Also check on storage changes (logout from another tab)
-    const handleStorageChange = () => {
-      const currentAuth = localStorage.getItem("isAuthenticated") === "true";
-      if (!currentAuth) {
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsChecking(false);
+      
+      if (!session?.user) {
         navigate("/login", { replace: true });
       }
-    };
+    });
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [isAuthenticated, navigate, location.pathname]);
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   // Show loading state while checking authentication
-  if (isChecking || !isAuthenticated) {
+  if (isChecking || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
         <div className="text-center">
