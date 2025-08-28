@@ -3,9 +3,9 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, Trash2 } from "lucide-react";
+import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, RefreshCw } from "lucide-react";
 import { Customer } from "@/types/customer";
-import { useCustomerAnalytics, useDeleteOrder, useDeleteCustomer } from "@/hooks/use-supabase-data";
+import { useCustomerAnalytics, useDeleteCustomer } from "@/hooks/use-supabase-data";
 import { useToast } from "@/components/ui/use-toast";
 import CustomerQRCode from "./CustomerQRCode";
 import CustomerPDFReport from "./CustomerPDFReport";
@@ -47,15 +47,15 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
     try {
       await deleteCustomer.mutateAsync(customerId);
       toast({
-        title: "Customer Data Deleted",
-        description: "All customer data including orders, payments, and profile have been permanently deleted",
+        title: "Customer Billing Reset",
+        description: "All customer order and payment history has been cleared. Customer can start fresh with new orders.",
       });
     } catch (error) {
-      console.error('Error deleting customer data:', error);
+      console.error('Error resetting customer billing:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete customer data. Please try again.",
+        description: "Failed to reset customer billing. Please try again.",
       });
     }
   };
@@ -104,11 +104,12 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
             </Button>
             <Button
               size="sm"
-              variant="destructive"
+              variant="outline"
+              className="text-orange-600 border-orange-200 hover:bg-orange-50"
               onClick={() => setShowDeleteDialog(true)}
             >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete History
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Reset Billing
             </Button>
           </div>
         </div>
