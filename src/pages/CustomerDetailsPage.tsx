@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit, Trash2, Plus, DollarSign } from "lucide-react";
-import { useCustomers, useOrders, usePayments, useDeleteOrder, useUpdateOrder } from "@/hooks/use-supabase-data";
+import { useCustomers, useOrders, useDeleteOrder, useUpdateOrder } from "@/hooks/use-supabase-data";
 import { format } from "date-fns";
 import PaymentEditDialog from "@/components/payments/PaymentEditDialog";
 import { Order } from "@/types/order";
@@ -18,7 +18,6 @@ const CustomerDetailsPage = () => {
   
   const { data: customers = [] } = useCustomers();
   const { data: orders = [] } = useOrders();
-  const { data: payments = [] } = usePayments();
   const deleteOrder = useDeleteOrder();
   const updateOrder = useUpdateOrder();
   
@@ -26,7 +25,6 @@ const CustomerDetailsPage = () => {
 
   const customer = customers.find(c => c.id === customerId);
   const customerOrders = orders.filter(order => order.customer_id === customerId);
-  const customerPayments = payments.filter(payment => payment.customer_id === customerId);
 
   if (!customer) {
     return (
