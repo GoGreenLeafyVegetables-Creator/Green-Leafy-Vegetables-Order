@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import PaymentEditDialog from "@/components/payments/PaymentEditDialog";
 import { Order } from "@/types/order";
+import { Customer } from "@/types/customer";
 
 const PaymentsPage = () => {
   const { data: customers = [] } = useCustomers();
@@ -23,6 +24,7 @@ const PaymentsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
 
   // Get all orders with payment information
   const allPayments = orders.map(order => {
@@ -71,6 +73,7 @@ const PaymentsPage = () => {
       });
       
       setEditingOrder(null);
+      setEditingCustomer(null);
       toast({
         title: "Payment updated",
         description: "Payment has been updated successfully",
@@ -82,6 +85,12 @@ const PaymentsPage = () => {
         description: "Failed to update payment",
       });
     }
+  };
+
+  const handleEditPayment = (order: Order) => {
+    const customer = customers.find(c => c.id === order.customer_id);
+    setEditingOrder(order);
+    setEditingCustomer(customer || null);
   };
 
   return (
@@ -190,7 +199,7 @@ const PaymentsPage = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => setEditingOrder(payment)}
+                          onClick={() => handleEditPayment(payment)}
                         >
                           <Edit2 className="h-3 w-3 mr-1" />
                           Edit
@@ -205,12 +214,15 @@ const PaymentsPage = () => {
         </CardContent>
       </Card>
 
-      {editingOrder && (
+      {editingOrder && editingCustomer && (
         <PaymentEditDialog
           order={editingOrder}
-          customer={editingOrder.customer || null}
+          customer={editingCustomer}
           isOpen={!!editingOrder}
-          onClose={() => setEditingOrder(null)}
+          onClose={() => {
+            setEditingOrder(null);
+            setEditingCustomer(null);
+          }}
           onSave={handlePaymentUpdate}
         />
       )}
