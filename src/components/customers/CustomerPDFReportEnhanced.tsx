@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -24,19 +23,8 @@ const CustomerPDFReportEnhanced: React.FC<CustomerPDFReportEnhancedProps> = ({
   const { data: vegetables } = useVegetables();
 
   const openPDFEditor = () => {
-    // Open the PDF editor in a new window with proper React component
-    const editorUrl = `/pdf-editor/${customer.id}`;
-    const editorWindow = window.open(editorUrl, '_blank', 'width=1400,height=900,scrollbars=yes,resizable=yes');
-    
-    if (editorWindow) {
-      onClose();
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Popup Blocked",
-        description: "Please allow popups for this site to use the PDF editor.",
-      });
-    }
+    // Open the PDF editor in the same tab instead of a new window
+    window.location.href = `/pdf-editor/${customer.id}`;
   };
 
   const getVegetableImage = (vegetableId: string) => {
@@ -319,7 +307,7 @@ const CustomerPDFReportEnhanced: React.FC<CustomerPDFReportEnhancedProps> = ({
               onClick={openPDFEditor}
               className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
-              <ExternalLink className="h-4 w-4" />
+              <Settings className="h-4 w-4" />
               Open Advanced PDF Editor
             </Button>
             
