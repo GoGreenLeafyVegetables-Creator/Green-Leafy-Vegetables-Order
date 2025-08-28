@@ -47,6 +47,9 @@ const CustomerQRCode: React.FC<CustomerQRCodeProps> = ({ customer, onClose }) =>
             <p className="text-xs text-blue-600 mt-1 break-all">
               {customerUrl}
             </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Shree Ganesha Green Leafy Vegetables
+            </p>
           </div>
           
           <div className="flex gap-2">

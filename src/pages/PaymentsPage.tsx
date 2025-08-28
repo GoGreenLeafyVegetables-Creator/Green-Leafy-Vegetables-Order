@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useOrders, useUpdateOrder } from "@/hooks/use-supabase-data";
-import { Search, Edit, DollarSign, Calendar, User, Phone } from "lucide-react";
+import { Search, Edit, DollarSign, Calendar, User, Phone, Eye } from "lucide-react";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import PaymentEditDialog from "@/components/payments/PaymentEditDialog";
 import { Order } from "@/types/order";
 
 const PaymentsPage = () => {
   const { data: orders = [], isLoading } = useOrders();
   const updateOrder = useUpdateOrder();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
@@ -69,7 +71,7 @@ const PaymentsPage = () => {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Payment Management</h1>
         <p className="text-muted-foreground">
-          Manage customer payments and order balances
+          Manage customer payments and order balances - Now fully editable!
         </p>
       </div>
 
@@ -131,7 +133,7 @@ const PaymentsPage = () => {
                     </div>
                     <div className="text-sm">
                       <span className="text-muted-foreground">Balance: </span>
-                      <span className={`font-medium ${order.balance_amount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      <span className={`font-medium ${order.balance_amount > 0 ? 'text-red-600' : order.balance_amount < 0 ? 'text-blue-600' : 'text-green-600'}`}>
                         ₹{order.balance_amount.toFixed(2)}
                       </span>
                     </div>
@@ -146,14 +148,24 @@ const PaymentsPage = () => {
                         via {order.payment_method}
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditingOrder(order)}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/customer-details/${customer?.id}`)}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingOrder(order)}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>

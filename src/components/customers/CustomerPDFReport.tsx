@@ -21,6 +21,17 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
     .filter(order => order.customer_id === customer.id)
     .sort((a, b) => new Date(b.order_date).getTime() - new Date(a.order_date).getTime());
 
+  const generateCustomerPageQR = () => {
+    const customerUrl = `${window.location.origin}/customer/${customer.qr_code}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(customerUrl)}`;
+  };
+
+  const generateUPIQRCode = (amount: number) => {
+    const upiId = "chowdaryindianbank@ybl";
+    const upiString = `upi://pay?pa=${upiId}&pn=SHREE%20GANESHA%20GREEN%20LEAFY%20VEGETABLES&am=${amount}&cu=INR&tn=Customer%20${customer.qr_code}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
+  };
+
   const generatePDF = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -238,6 +249,25 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
               padding-bottom: 10px;
               border-bottom: 2px solid #22c55e;
             }
+            .qr-section {
+              background: #f8f9fa;
+              padding: 20px;
+              border-radius: 10px;
+              margin: 30px 0;
+              text-align: center;
+            }
+            .qr-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 30px;
+              margin: 30px 0;
+            }
+            .qr-item {
+              text-align: center;
+              background: #f8f9fa;
+              padding: 20px;
+              border-radius: 10px;
+            }
             @media print { 
               body { margin: 0; }
               .page-break { page-break-before: always; }
@@ -255,7 +285,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
         <body>
           <div class="header">
             <img src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" alt="Lord Ganesha Logo" class="logo" />
-            <div class="company-name">GO GREEN LEAFY VEGETABLES</div>
+            <div class="company-name">SHREE GANESHA GREEN LEAFY VEGETABLES</div>
             <div class="report-title">Detailed Customer Business Report</div>
             <div style="font-size: 14px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
           </div>
@@ -322,13 +352,36 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
             }
           </div>
           
+          ${analytics.totalBalance > 0 ? `
+            <div class="qr-grid">
+              <div class="qr-item">
+                <h3>Pay Outstanding Balance</h3>
+                <img src="${generateUPIQRCode(analytics.totalBalance)}" alt="UPI Payment QR Code" style="width: 200px; height: 200px;">
+                <p><strong>UPI ID:</strong> chowdaryindianbank@ybl</p>
+                <p><strong>Amount:</strong> ₹${analytics.totalBalance.toFixed(2)}</p>
+              </div>
+              <div class="qr-item">
+                <h3>Access Your Orders</h3>
+                <img src="${generateCustomerPageQR()}" alt="Customer Page QR Code" style="width: 200px; height: 200px;">
+                <p><strong>View Orders & Place New Orders</strong></p>
+                <p>Scan to access your customer page</p>
+              </div>
+            </div>
+          ` : `
+            <div class="qr-section">
+              <h3>📱 Access Your Customer Page</h3>
+              <img src="${generateCustomerPageQR()}" alt="Customer Page QR Code" style="width: 200px; height: 200px;">
+              <p><strong>Scan to view orders and place new orders easily</strong></p>
+            </div>
+          `}
+          
           <div class="orders-section">
             <h3>📋 Detailed Order History (${customerOrders.length} Orders)</h3>
             ${getOrdersHtml()}
           </div>
           
           <div class="footer">
-            <div><strong>GO GREEN LEAFY VEGETABLES</strong></div>
+            <div><strong>SHREE GANESHA GREEN LEAFY VEGETABLES</strong></div>
             <div>Fresh Vegetables • Quality Service • Trusted Business Partner</div>
             <div>Report Generated: ${new Date().toLocaleString()} | Customer ID: ${customer.id.substring(0, 8)}</div>
           </div>
@@ -358,6 +411,8 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
             <li>Individual order items and pricing</li>
             <li>Payment details for each order</li>
             <li>Outstanding balance summary</li>
+            <li>UPI QR code for balance payment</li>
+            <li>Customer page QR code for easy access</li>
           </ul>
           
           <div className="bg-blue-50 p-3 rounded-lg">
@@ -365,7 +420,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
               <strong>Orders Found:</strong> {customerOrders.length} orders
             </p>
             <p className="text-sm text-blue-600">
-              All order details including items, dates, and payment status will be included in the PDF.
+              All order details including items, dates, payment status, and QR codes will be included in the PDF.
             </p>
           </div>
           

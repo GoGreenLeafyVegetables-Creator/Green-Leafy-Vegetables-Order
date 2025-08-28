@@ -3,256 +3,182 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus } from "lucide-react";
-import { useCustomers, useOrders, useCreateOrder } from "@/hooks/use-supabase-data";
-import { useToast } from "@/components/ui/use-toast";
-import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { useCustomers, useOrders } from "@/hooks/use-supabase-data";
+import { Search, User, Phone, Store, MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CustomerBalancePage = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
-  const [balanceAmount, setBalanceAmount] = useState<number>(0);
-  const [balanceType, setBalanceType] = useState<'outstanding' | 'advance'>('outstanding');
-  const [notes, setNotes] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const { data: customers = [], isLoading: customersLoading } = useCustomers();
   const { data: orders = [], isLoading: ordersLoading } = useOrders();
-  const createOrder = useCreateOrder();
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Calculate customer balances
-  const customerBalances = customers.map(customer => {
+  // Calculate balance for each customer
+  const customersWithBalance = customers.map(customer => {
     const customerOrders = orders.filter(order => order.customer_id === customer.id);
-    const totalOutstanding = customerOrders.reduce((sum, order) => sum + Math.max(0, order.balance_amount), 0);
-    const totalAdvance = customerOrders.reduce((sum, order) => sum + Math.abs(Math.min(0, order.balance_amount)), 0);
-    const netBalance = totalOutstanding - totalAdvance;
+    const totalBalance = customerOrders.reduce((sum, order) => sum + order.balance_amount, 0);
+    const totalBusiness = customerOrders.reduce((sum, order) => sum + order.total_amount, 0);
+    const orderCount = customerOrders.length;
     
     return {
       ...customer,
-      totalOutstanding,
-      totalAdvance,
-      netBalance,
-      orderCount: customerOrders.length
+      balance: totalBalance,
+      totalBusiness,
+      orderCount
     };
   });
 
-  // Filter customers based on search
-  const filteredCustomers = customerBalances.filter(customer =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.shop_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.mobile.includes(searchQuery)
-  );
+  // Filter customers with outstanding balances and search term
+  const filteredCustomers = customersWithBalance.filter(customer => {
+    const matchesSearch = searchTerm === "" || 
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.mobile.includes(searchTerm) ||
+      (customer.shop_name && customer.shop_name.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    return matchesSearch && customer.balance !== 0;
+  });
 
-  const handleAddBalance = async () => {
-    if (!selectedCustomerId || balanceAmount <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Input",
-        description: "Please select a customer and enter a valid amount",
-      });
-      return;
-    }
+  // Sort by balance amount (highest due first, then advance amounts)
+  const sortedCustomers = filteredCustomers.sort((a, b) => {
+    if (a.balance > 0 && b.balance > 0) return b.balance - a.balance; // Highest due first
+    if (a.balance < 0 && b.balance < 0) return a.balance - b.balance; // Smallest advance first
+    if (a.balance > 0 && b.balance < 0) return -1; // Due amounts before advance
+    if (a.balance < 0 && b.balance > 0) return 1; // Advance amounts after due
+    return 0;
+  });
 
-    setIsSubmitting(true);
+  const getBalanceBadge = (balance: number) => {
+    if (balance === 0) return <Badge className="bg-green-500">No Dues</Badge>;
+    if (balance > 0) return <Badge variant="destructive">₹{balance.toFixed(2)} Due</Badge>;
+    return <Badge className="bg-blue-500">₹{Math.abs(balance).toFixed(2)} Advance</Badge>;
+  };
 
-    try {
-      // Create a balance adjustment order
-      const adjustmentAmount = balanceType === 'outstanding' ? balanceAmount : -balanceAmount;
-      
-      const orderData = {
-        customer_id: selectedCustomerId,
-        order_date: new Date().toISOString().split('T')[0],
-        total_amount: balanceAmount,
-        payment_status: balanceType === 'outstanding' ? 'pending' as const : 'paid' as const,
-        payment_method: 'adjustment' as const,
-        paid_amount: balanceType === 'advance' ? balanceAmount : 0,
-        balance_amount: adjustmentAmount
-      };
-
-      // Create order with empty items array for balance adjustment
-      await createOrder.mutateAsync({ order: orderData, items: [] });
-
-      toast({
-        title: "Balance Updated",
-        description: `${balanceType === 'outstanding' ? 'Outstanding' : 'Advance'} balance of ₹${balanceAmount} has been added`,
-      });
-
-      // Reset form
-      setSelectedCustomerId("");
-      setBalanceAmount(0);
-      setNotes("");
-    } catch (error) {
-      console.error('Error updating balance:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update customer balance",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleCustomerClick = (customerId: string) => {
+    navigate(`/customer-details/${customerId}`);
   };
 
   if (customersLoading || ordersLoading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Customer Balance Management</h1>
-          <p className="text-muted-foreground">Manage customer outstanding balances and advance payments</p>
-        </div>
-        <div>Loading customer data...</div>
-      </div>
-    );
+    return <div className="p-6">Loading customer balances...</div>;
   }
+
+  const totalDue = sortedCustomers.reduce((sum, customer) => 
+    sum + (customer.balance > 0 ? customer.balance : 0), 0
+  );
+  
+  const totalAdvance = Math.abs(sortedCustomers.reduce((sum, customer) => 
+    sum + (customer.balance < 0 ? customer.balance : 0), 0
+  ));
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Customer Balance Management</h1>
-        <p className="text-muted-foreground">Manage customer outstanding balances and advance payments</p>
+        <h1 className="text-3xl font-bold tracking-tight">Outstanding Customer Balances</h1>
+        <p className="text-muted-foreground">
+          View and manage customers with outstanding balances (Due/Advance)
+        </p>
       </div>
 
-      {/* Add Balance Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Add Customer Balance
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Select Customer</Label>
-              <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name} {customer.shop_name && `- ${customer.shop_name}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-sm font-medium text-muted-foreground">Total Due Amount</p>
+              <p className="text-3xl font-bold text-red-600">₹{totalDue.toFixed(2)}</p>
             </div>
-            <div className="space-y-2">
-              <Label>Balance Type</Label>
-              <Select value={balanceType} onValueChange={(value: 'outstanding' | 'advance') => setBalanceType(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="outstanding">Outstanding (Customer Owes)</SelectItem>
-                  <SelectItem value="advance">Advance (Customer Paid Extra)</SelectItem>
-                </SelectContent>
-              </Select>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-sm font-medium text-muted-foreground">Total Advance Amount</p>
+              <p className="text-3xl font-bold text-blue-600">₹{totalAdvance.toFixed(2)}</p>
             </div>
-            <div className="space-y-2">
-              <Label>Amount</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={balanceAmount}
-                onChange={(e) => setBalanceAmount(parseFloat(e.target.value) || 0)}
-                placeholder="Enter amount"
-              />
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-sm font-medium text-muted-foreground">Customers with Balance</p>
+              <p className="text-3xl font-bold text-purple-600">{sortedCustomers.length}</p>
             </div>
-            <div className="space-y-2">
-              <Label>Notes (Optional)</Label>
-              <Input
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add notes about this balance adjustment"
-              />
-            </div>
-          </div>
-          <Button 
-            onClick={handleAddBalance} 
-            disabled={isSubmitting || !selectedCustomerId || balanceAmount <= 0}
-            className="w-full md:w-auto"
-          >
-            {isSubmitting ? "Adding Balance..." : "Add Balance"}
-          </Button>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Customer Balances List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Customer Balances</CardTitle>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search customers..."
-              className="pl-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          {filteredCustomers.length > 0 ? (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Mobile</TableHead>
-                    <TableHead className="text-right">Outstanding</TableHead>
-                    <TableHead className="text-right">Advance</TableHead>
-                    <TableHead className="text-right">Net Balance</TableHead>
-                    <TableHead className="text-center">Orders</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCustomers.map((customer) => (
-                    <TableRow key={customer.id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <div>{customer.name}</div>
-                          {customer.shop_name && (
-                            <div className="text-xs text-muted-foreground">{customer.shop_name}</div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{customer.mobile}</TableCell>
-                      <TableCell className="text-right text-red-600 font-medium">
-                        {customer.totalOutstanding > 0 ? `₹${customer.totalOutstanding.toFixed(2)}` : '-'}
-                      </TableCell>
-                      <TableCell className="text-right text-green-600 font-medium">
-                        {customer.totalAdvance > 0 ? `₹${customer.totalAdvance.toFixed(2)}` : '-'}
-                      </TableCell>
-                      <TableCell className={`text-right font-medium ${
-                        customer.netBalance > 0 ? 'text-red-600' : 
-                        customer.netBalance < 0 ? 'text-green-600' : 'text-gray-600'
-                      }`}>
-                        {customer.netBalance === 0 ? 'Settled' : 
-                         customer.netBalance > 0 ? `₹${customer.netBalance.toFixed(2)} Due` :
-                         `₹${Math.abs(customer.netBalance).toFixed(2)} Advance`}
-                      </TableCell>
-                      <TableCell className="text-center">{customer.orderCount}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-muted-foreground mb-4">
-                {searchQuery ? "No customers match your search" : "No customers found"}
+      <div className="flex items-center space-x-2">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search customers by name, mobile, or shop..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-md"
+        />
+      </div>
+
+      <div className="grid gap-4">
+        {sortedCustomers.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-muted-foreground">
+                {searchTerm ? "No customers found matching your search." : "No customers with outstanding balances found."}
               </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          sortedCustomers.map((customer) => (
+            <Card key={customer.id} className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="p-6" onClick={() => handleCustomerClick(customer.id)}>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium text-lg">{customer.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Phone className="h-3 w-3" />
+                      {customer.mobile}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {customer.shop_name && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Store className="h-3 w-3 text-muted-foreground" />
+                        {customer.shop_name}
+                      </div>
+                    )}
+                    {customer.location && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        {customer.location}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Total Business</p>
+                    <p className="font-medium">₹{customer.totalBusiness.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">{customer.orderCount} orders</p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="text-center">
+                      {getBalanceBadge(customer.balance)}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Click to view details
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
     </div>
   );
 };

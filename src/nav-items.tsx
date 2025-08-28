@@ -9,6 +9,7 @@ import ReportsPage from "./pages/ReportsPage";
 import PaymentsPage from "./pages/PaymentsPage";
 import PaymentUpdatePage from "./pages/PaymentUpdatePage";
 import CustomerBalancePage from "./pages/CustomerBalancePage";
+import CustomerDetailsPage from "./pages/CustomerDetailsPage";
 import BackupPage from "./pages/BackupPage";
 
 export const navItems = [
@@ -71,5 +72,12 @@ export const navItems = [
     to: "/backup",
     icon: <SettingsIcon className="h-4 w-4" />,
     page: <BackupPage />,
+  },
+  {
+    title: "Customer Details",
+    to: "/customer-details/:customerId",
+    icon: <UsersIcon className="h-4 w-4" />,
+    page: <CustomerDetailsPage />,
+    hidden: true, // This route won't show in navigation but will be accessible
   },
 ];

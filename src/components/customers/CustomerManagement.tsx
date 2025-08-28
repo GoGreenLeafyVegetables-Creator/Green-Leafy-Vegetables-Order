@@ -3,11 +3,13 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store } from "lucide-react";
+import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, Trash2 } from "lucide-react";
 import { Customer } from "@/types/customer";
-import { useCustomerAnalytics } from "@/hooks/use-supabase-data";
+import { useCustomerAnalytics, useDeleteOrder, useDeleteCustomer } from "@/hooks/use-supabase-data";
+import { useToast } from "@/components/ui/use-toast";
 import CustomerQRCode from "./CustomerQRCode";
 import CustomerPDFReport from "./CustomerPDFReport";
+import CustomerOrderHistoryDeleteDialog from "./CustomerOrderHistoryDeleteDialog";
 
 interface CustomerManagementProps {
   customer: Customer;
@@ -16,6 +18,9 @@ interface CustomerManagementProps {
 const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => {
   const [showQR, setShowQR] = useState(false);
   const [showPDF, setShowPDF] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { toast } = useToast();
+  const deleteCustomer = useDeleteCustomer();
   
   // Add safety check for customer
   if (!customer) {
@@ -36,6 +41,23 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
     if (balance === 0) return <Badge className="bg-green-500">No Dues</Badge>;
     if (balance > 0) return <Badge variant="destructive">₹{balance.toFixed(2)} Due</Badge>;
     return <Badge className="bg-blue-500">₹{Math.abs(balance).toFixed(2)} Advance</Badge>;
+  };
+
+  const handleDeleteCustomerData = async (customerId: string) => {
+    try {
+      await deleteCustomer.mutateAsync(customerId);
+      toast({
+        title: "Customer Data Deleted",
+        description: "All customer data including orders, payments, and profile have been permanently deleted",
+      });
+    } catch (error) {
+      console.error('Error deleting customer data:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete customer data. Please try again.",
+      });
+    }
   };
 
   return (
@@ -79,6 +101,14 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
             >
               <FileText className="h-4 w-4 mr-1" />
               PDF Report
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete History
             </Button>
           </div>
         </div>
@@ -136,6 +166,15 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
           customer={customer}
           analytics={analytics}
           onClose={() => setShowPDF(false)}
+        />
+      )}
+
+      {showDeleteDialog && (
+        <CustomerOrderHistoryDeleteDialog
+          customer={customer}
+          isOpen={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          onConfirm={handleDeleteCustomerData}
         />
       )}
     </Card>
