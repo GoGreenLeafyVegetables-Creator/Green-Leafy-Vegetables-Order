@@ -3,30 +3,43 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useOrders, useUpdateOrder } from "@/hooks/use-supabase-data";
-import { Search, Edit, DollarSign, Calendar, User, Phone, Eye } from "lucide-react";
+import { Edit2, Search, Filter } from "lucide-react";
+import { useCustomers, useOrders, useUpdateOrder } from "@/hooks/use-supabase-data";
 import { format } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 import PaymentEditDialog from "@/components/payments/PaymentEditDialog";
 import { Order } from "@/types/order";
 
 const PaymentsPage = () => {
-  const { data: orders = [], isLoading } = useOrders();
+  const { data: customers = [] } = useCustomers();
+  const { data: orders = [] } = useOrders();
   const updateOrder = useUpdateOrder();
-  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
-  const filteredOrders = orders.filter(order => {
-    const customer = (order as any).customers?.[0];
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      customer?.name?.toLowerCase().includes(searchLower) ||
-      customer?.mobile?.includes(searchTerm) ||
-      order.id.toLowerCase().includes(searchLower) ||
-      order.order_date.includes(searchTerm)
-    );
+  // Get all orders with payment information
+  const allPayments = orders.map(order => {
+    const customer = customers.find(c => c.id === order.customer_id);
+    return {
+      ...order,
+      customer
+    };
+  });
+
+  // Filter payments based on search and status
+  const filteredPayments = allPayments.filter(payment => {
+    const matchesSearch = payment.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         payment.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || payment.payment_status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (status: string) => {
@@ -56,128 +69,146 @@ const PaymentsPage = () => {
         payment_status: updates.payment_status as 'pending' | 'partial' | 'paid',
         balance_amount: balance_amount
       });
+      
       setEditingOrder(null);
+      toast({
+        title: "Payment updated",
+        description: "Payment has been updated successfully",
+      });
     } catch (error) {
-      console.error('Error updating payment:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update payment",
+      });
     }
   };
-
-  if (isLoading) {
-    return <div className="p-6">Loading payments...</div>;
-  }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Payment Management</h1>
         <p className="text-muted-foreground">
-          Manage customer payments and order balances - Now fully editable!
+          Manage and track all customer payments
         </p>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by customer name, mobile, order ID, or date..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-md"
-        />
-      </div>
+      {/* Search and Filter */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Label htmlFor="search" className="sr-only">Search payments</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Search by customer name or order ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="w-full sm:w-48">
+              <Label htmlFor="status-filter" className="sr-only">Filter by status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="partial">Partial</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="grid gap-4">
-        {filteredOrders.map((order) => {
-          const customer = (order as any).customers?.[0];
-          return (
-            <Card key={order.id}>
-              <CardContent className="p-6">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{customer?.name}</span>
-                    </div>
-                    {customer?.mobile && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        {customer.mobile}
-                      </div>
-                    )}
-                    {customer?.shop_name && (
-                      <div className="text-sm text-muted-foreground">
-                        {customer.shop_name}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {format(new Date(order.order_date), 'PPP')}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Order ID: {order.id.slice(0, 8)}...
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">₹{order.total_amount.toFixed(2)}</span>
-                    </div>
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Paid: </span>
-                      <span className="font-medium">₹{order.paid_amount.toFixed(2)}</span>
-                    </div>
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Balance: </span>
-                      <span className={`font-medium ${order.balance_amount > 0 ? 'text-red-600' : order.balance_amount < 0 ? 'text-blue-600' : 'text-green-600'}`}>
-                        ₹{order.balance_amount.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <Badge className={getStatusColor(order.payment_status)}>
-                        {order.payment_status?.toUpperCase()}
-                      </Badge>
-                      <div className="text-xs text-muted-foreground">
-                        via {order.payment_method}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/customer-details/${customer?.id}`)}
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        View
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingOrder(order)}
-                      >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {/* Payments Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Payment Records</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Order ID</TableHead>
+                  <TableHead>Order Date</TableHead>
+                  <TableHead>Total Amount</TableHead>
+                  <TableHead>Paid Amount</TableHead>
+                  <TableHead>Balance</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Payment Method</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredPayments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                      No payments found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredPayments.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell className="font-medium">
+                        {payment.customer?.name || 'Unknown Customer'}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {payment.id.slice(0, 8)}...
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(payment.order_date), "PPP")}
+                      </TableCell>
+                      <TableCell>
+                        ₹{payment.total_amount.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-green-600">
+                        ₹{payment.paid_amount.toFixed(2)}
+                      </TableCell>
+                      <TableCell className={payment.balance_amount > 0 ? "text-red-600" : payment.balance_amount < 0 ? "text-blue-600" : "text-green-600"}>
+                        ₹{payment.balance_amount.toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(payment.payment_status)}>
+                          {payment.payment_status?.toUpperCase()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="capitalize">
+                        {payment.payment_method || 'cash'}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingOrder(payment)}
+                        >
+                          <Edit2 className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
       {editingOrder && (
         <PaymentEditDialog
           order={editingOrder}
-          customer={(editingOrder as any).customers?.[0] || null}
+          customer={editingOrder.customer || null}
           isOpen={!!editingOrder}
           onClose={() => setEditingOrder(null)}
           onSave={handlePaymentUpdate}
