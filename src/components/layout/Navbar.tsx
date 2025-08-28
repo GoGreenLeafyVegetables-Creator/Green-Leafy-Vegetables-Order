@@ -1,20 +1,11 @@
 
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { navItems } from "@/nav-items";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
-  };
 
   return (
     <nav className="bg-white border-b border-gray-200">
@@ -24,11 +15,11 @@ const Navbar = () => {
             <div className="flex-shrink-0 flex items-center">
               <img 
                 src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" 
-                alt="Shree Ganesha Green Leafy Vegetables Logo" 
+                alt="Lord Ganesha - Go Green Leafy Vegetables Logo" 
                 className="h-10 w-10 mr-3"
               />
               <Link to="/" className="text-xl font-bold text-green-600">
-                Shree Ganesha Green Leafy Vegetables
+                Go Green Leafy Vegetables
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -48,17 +39,6 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
-          </div>
-          <div className="flex items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="ml-4"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
           </div>
         </div>
       </div>

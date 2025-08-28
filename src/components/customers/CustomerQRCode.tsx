@@ -18,7 +18,7 @@ const CustomerQRCode: React.FC<CustomerQRCodeProps> = ({ customer, onClose }) =>
     
     const link = document.createElement('a');
     link.href = qrApiUrl;
-    link.download = `${customer.name}-Shree-Ganesha-QR-Code.png`;
+    link.download = `${customer.name}-QR-Code.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -35,7 +35,7 @@ const CustomerQRCode: React.FC<CustomerQRCodeProps> = ({ customer, onClose }) =>
           <div className="p-4 bg-white border rounded-lg">
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(customerUrl)}`}
-              alt={`QR Code for ${customer.name} - Shree Ganesha Green Leafy Vegetables`}
+              alt={`QR Code for ${customer.name}`}
               className="w-48 h-48"
             />
           </div>

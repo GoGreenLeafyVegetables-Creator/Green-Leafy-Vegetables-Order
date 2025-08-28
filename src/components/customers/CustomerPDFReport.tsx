@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -253,8 +254,8 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
         </head>
         <body>
           <div class="header">
-            <img src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" alt="Shree Ganesha Logo" class="logo" />
-            <div class="company-name">SHREE GANESHA GREEN LEAFY VEGETABLES</div>
+            <img src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" alt="Lord Ganesha Logo" class="logo" />
+            <div class="company-name">GO GREEN LEAFY VEGETABLES</div>
             <div class="report-title">Detailed Customer Business Report</div>
             <div style="font-size: 14px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
           </div>
@@ -327,7 +328,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
           </div>
           
           <div class="footer">
-            <div><strong>SHREE GANESHA GREEN LEAFY VEGETABLES</strong></div>
+            <div><strong>GO GREEN LEAFY VEGETABLES</strong></div>
             <div>Fresh Vegetables • Quality Service • Trusted Business Partner</div>
             <div>Report Generated: ${new Date().toLocaleString()} | Customer ID: ${customer.id.substring(0, 8)}</div>
           </div>

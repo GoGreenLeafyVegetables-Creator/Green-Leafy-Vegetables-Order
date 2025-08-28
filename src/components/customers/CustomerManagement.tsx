@@ -3,21 +3,9 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, Trash2 } from "lucide-react";
+import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store } from "lucide-react";
 import { Customer } from "@/types/customer";
-import { useCustomerAnalytics, useOrders, useDeleteOrder } from "@/hooks/use-supabase-data";
-import { useToast } from "@/components/ui/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { useCustomerAnalytics } from "@/hooks/use-supabase-data";
 import CustomerQRCode from "./CustomerQRCode";
 import CustomerPDFReport from "./CustomerPDFReport";
 
@@ -28,7 +16,6 @@ interface CustomerManagementProps {
 const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => {
   const [showQR, setShowQR] = useState(false);
   const [showPDF, setShowPDF] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   
   // Add safety check for customer
   if (!customer) {
@@ -44,34 +31,6 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
   }
 
   const { data: analytics, isLoading } = useCustomerAnalytics(customer.id);
-  const { data: orders = [] } = useOrders();
-  const deleteOrder = useDeleteOrder();
-  const { toast } = useToast();
-
-  const customerOrders = orders.filter(order => order.customer_id === customer.id);
-
-  const handleDeleteOrderHistory = async () => {
-    setIsDeleting(true);
-    try {
-      // Delete all orders for this customer
-      for (const order of customerOrders) {
-        await deleteOrder.mutateAsync(order.id);
-      }
-      
-      toast({
-        title: "Order History Deleted",
-        description: `All ${customerOrders.length} orders for ${customer.name} have been deleted successfully.`,
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete order history. Please try again.",
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const getStatusBadge = (balance: number) => {
     if (balance === 0) return <Badge className="bg-green-500">No Dues</Badge>;
@@ -121,38 +80,6 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
               <FileText className="h-4 w-4 mr-1" />
               PDF Report
             </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  disabled={customerOrders.length === 0}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete History
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Order History</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete all order history for <strong>{customer.name}</strong>? 
-                    This will permanently remove {customerOrders.length} orders, all associated payments, 
-                    and balance details. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDeleteOrderHistory}
-                    disabled={isDeleting}
-                    className="bg-red-600 hover:bg-red-700"
-                  >
-                    {isDeleting ? "Deleting..." : "Delete All History"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </div>
         </div>
       </CardHeader>
