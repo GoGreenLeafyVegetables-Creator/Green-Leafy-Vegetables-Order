@@ -8,7 +8,7 @@ import { Customer } from "@/types/customer";
 import { useCustomerAnalytics, useDeleteCustomer } from "@/hooks/use-supabase-data";
 import { useToast } from "@/components/ui/use-toast";
 import CustomerQRCode from "./CustomerQRCode";
-import CustomerPDFReport from "./CustomerPDFReport";
+import CustomerPDFReportEnhanced from "./CustomerPDFReportEnhanced";
 import CustomerOrderHistoryDeleteDialog from "./CustomerOrderHistoryDeleteDialog";
 
 interface CustomerManagementProps {
@@ -63,8 +63,8 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <div className="flex-1">
             <CardTitle className="text-xl">{customer.name}</CardTitle>
             <div className="flex flex-col gap-1 mt-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
@@ -85,7 +85,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
               )}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -98,6 +98,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
               size="sm"
               variant="outline"
               onClick={() => setShowPDF(true)}
+              className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 hover:from-blue-100 hover:to-purple-100"
             >
               <FileText className="h-4 w-4 mr-1" />
               PDF Report
@@ -163,7 +164,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
       )}
       
       {showPDF && analytics && (
-        <CustomerPDFReport
+        <CustomerPDFReportEnhanced
           customer={customer}
           analytics={analytics}
           onClose={() => setShowPDF(false)}
