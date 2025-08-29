@@ -1,8 +1,7 @@
 
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,20 +9,18 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const location = useLocation();
-  
-  const { data: session, isLoading } = useQuery({
-    queryKey: ['session'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
-    }
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  if (isLoading) {
+  useEffect(() => {
+    const authState = localStorage.getItem('isAuthenticated');
+    setIsAuthenticated(authState === 'true');
+  }, []);
+
+  if (isAuthenticated === null) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!session) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

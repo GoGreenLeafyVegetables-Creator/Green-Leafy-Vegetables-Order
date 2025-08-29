@@ -42,14 +42,13 @@ const LoginForm = () => {
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("adminUser", JSON.stringify({
           email: credentials.email,
-          name: "Go Green Leafy Vegetables Admin"
+          name: "Shree Ganesha Green Leafy Vegetables Admin"
         }));
         toast({
           title: "Login successful",
-          description: "Welcome to the Vegetable Order Management System",
+          description: "Welcome to Shree Ganesha Green Leafy Vegetables Management System",
         });
-        // Use window.location for immediate redirect
-        window.location.href = "/dashboard";
+        navigate("/");
       } else {
         toast({
           variant: "destructive",
@@ -73,7 +72,7 @@ const LoginForm = () => {
             />
           </div>
           <CardTitle className="text-2xl text-primary font-bold">
-            Go Green Leafy Vegetables
+            Shree Ganesha Green Leafy Vegetables
           </CardTitle>
           <CardDescription className="text-center">
             Admin Portal - Vegetable Order Management System

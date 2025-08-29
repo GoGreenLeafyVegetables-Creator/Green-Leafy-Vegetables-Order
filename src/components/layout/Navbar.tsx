@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,7 @@ const Navbar = () => {
               className="h-8 w-8"
             />
             <span className="font-bold text-lg text-green-600 hidden sm:block">
-              Ganesha Vegetables
+              Shree Ganesha Vegetables
             </span>
           </div>
           

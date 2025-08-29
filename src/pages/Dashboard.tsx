@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import StatCard from "@/components/dashboard/StatCard";
@@ -42,7 +41,7 @@ const Dashboard = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to Go Green Leafy Vegetables Management System</p>
+          <p className="text-muted-foreground">Welcome to Shree Ganesha Green Leafy Vegetables Management System</p>
         </div>
         <Button onClick={() => navigate("/orders/new")} className="bg-green-600 hover:bg-green-700">
           New Order

@@ -14,7 +14,7 @@ const Footer = () => {
     localStorage.removeItem("adminUser");
     toast({
       title: "Logged out successfully",
-      description: "You have been logged out of the admin portal",
+      description: "You have been logged out of Shree Ganesha Green Leafy Vegetables admin portal",
     });
     navigate("/login");
   };
