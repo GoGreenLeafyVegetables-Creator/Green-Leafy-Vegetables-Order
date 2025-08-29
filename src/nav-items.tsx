@@ -1,56 +1,83 @@
 
-import {
-  HomeIcon,
-  ShoppingCart,
-  Users,
-  Leaf,
-  FileBarChart,
-  CreditCard,
-  Archive,
-} from "lucide-react";
+import { HomeIcon, UsersIcon, ShoppingCartIcon, PackageIcon, FileTextIcon, CreditCardIcon, SettingsIcon, DollarSignIcon } from "lucide-react";
+import Dashboard from "./pages/Dashboard";
+import CustomersPage from "./pages/CustomersPage";
+import OrdersPage from "./pages/OrdersPage";
+import OrderFormPage from "./pages/OrderFormPage";
+import VegetablesPage from "./pages/VegetablesPage";
+import ReportsPage from "./pages/ReportsPage";
+import PaymentsPage from "./pages/PaymentsPage";
+import PaymentUpdatePage from "./pages/PaymentUpdatePage";
+import CustomerBalancePage from "./pages/CustomerBalancePage";
+import CustomerDetailsPage from "./pages/CustomerDetailsPage";
+import BackupPage from "./pages/BackupPage";
 
 export const navItems = [
   {
     title: "Dashboard",
-    url: "/",
-    icon: HomeIcon,
-  },
-  {
-    title: "Orders",
-    url: "/orders",
-    icon: ShoppingCart,
+    to: "/dashboard",
+    icon: <HomeIcon className="h-4 w-4" />,
+    page: <Dashboard />,
   },
   {
     title: "Customers",
-    url: "/customers",
-    icon: Users,
+    to: "/customers",
+    icon: <UsersIcon className="h-4 w-4" />,
+    page: <CustomersPage />,
+  },
+  {
+    title: "Orders",
+    to: "/orders",
+    icon: <ShoppingCartIcon className="h-4 w-4" />,
+    page: <OrdersPage />,
+  },
+  {
+    title: "New Order",
+    to: "/orders/new",
+    icon: <ShoppingCartIcon className="h-4 w-4" />,
+    page: <OrderFormPage />,
   },
   {
     title: "Vegetables",
-    url: "/vegetables",
-    icon: Leaf,
-  },
-  {
-    title: "Reports",
-    url: "/reports",
-    icon: FileBarChart,
+    to: "/vegetables",
+    icon: <PackageIcon className="h-4 w-4" />,
+    page: <VegetablesPage />,
   },
   {
     title: "Payments",
-    url: "/payments",
-    icon: CreditCard,
+    to: "/payments",
+    icon: <CreditCardIcon className="h-4 w-4" />,
+    page: <PaymentsPage />,
+  },
+  {
+    title: "Update Payments",
+    to: "/payment-updates",
+    icon: <CreditCardIcon className="h-4 w-4" />,
+    page: <PaymentUpdatePage />,
+  },
+  {
+    title: "Customer Balance",
+    to: "/customer-balance",
+    icon: <DollarSignIcon className="h-4 w-4" />,
+    page: <CustomerBalancePage />,
+  },
+  {
+    title: "Reports",
+    to: "/reports",
+    icon: <FileTextIcon className="h-4 w-4" />,
+    page: <ReportsPage />,
   },
   {
     title: "Backup",
-    url: "/backup",
-    icon: Archive,
+    to: "/backup",
+    icon: <SettingsIcon className="h-4 w-4" />,
+    page: <BackupPage />,
   },
-];
-
-// Hidden routes that don't appear in navigation but are accessible
-export const hiddenRoutes = [
   {
-    path: "/pdf-editor/:customerId",
-    component: "PDFEditorPage",
+    title: "Customer Details",
+    to: "/customer-details/:customerId",
+    icon: <UsersIcon className="h-4 w-4" />,
+    page: <CustomerDetailsPage />,
+    hidden: true, // This route won't show in navigation but will be accessible
   },
 ];

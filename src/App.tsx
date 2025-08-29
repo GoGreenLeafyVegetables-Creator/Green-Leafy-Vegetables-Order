@@ -1,27 +1,20 @@
 
-import { Toaster } from "@/components/ui/sonner";
+import React from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { navItems } from "./nav-items";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import OrdersPage from "./pages/OrdersPage";
-import CustomersPage from "./pages/CustomersPage";
-import VegetablesPage from "./pages/VegetablesPage";
-import ReportsPage from "./pages/ReportsPage";
-import PaymentsPage from "./pages/PaymentsPage";
-import BackupPage from "./pages/BackupPage";
-import CustomerDetailsPage from "./pages/CustomerDetailsPage";
-import OrderFormPage from "./pages/OrderFormPage";
+import Layout from "./components/layout/Layout";
 import CustomerOrderPage from "./pages/CustomerOrderPage";
-import CustomerOrderPageSimple from "./pages/CustomerOrderPageSimple";
 import CustomerPublicPage from "./pages/CustomerPublicPage";
-import PaymentUpdatePage from "./pages/PaymentUpdatePage";
-import CustomerBalancePage from "./pages/CustomerBalancePage";
-import PDFEditorPage from "./pages/PDFEditorPage";
-import NotFound from "./pages/NotFound";
+import CustomerOrderPageSimple from "./pages/CustomerOrderPageSimple";
+import Login from "./pages/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import Dashboard from "./pages/Dashboard";
+// Lazy load OrderFormPage to avoid potential circular dependencies
+const OrderFormPage = React.lazy(() => import("./pages/OrderFormPage"));
 
 const queryClient = new QueryClient();
 
@@ -29,26 +22,46 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
+      <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Login route - no layout */}
           <Route path="/login" element={<Login />} />
-          <Route path="/customer/:qrCode" element={<CustomerPublicPage />} />
-          <Route path="/customer/:customerId/order" element={<CustomerOrderPage />} />
-          <Route path="/customer/:customerId/order-simple" element={<CustomerOrderPageSimple />} />
           
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-          <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-          <Route path="/orders/new" element={<ProtectedRoute><OrderFormPage /></ProtectedRoute>} />
-          <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
-          <Route path="/customers/:customerId" element={<ProtectedRoute><CustomerDetailsPage /></ProtectedRoute>} />
-          <Route path="/vegetables" element={<ProtectedRoute><VegetablesPage /></ProtectedRoute>} />
-          <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
-          <Route path="/payments" element={<ProtectedRoute><PaymentsPage /></ProtectedRoute>} />
-          <Route path="/payments/:customerId" element={<ProtectedRoute><PaymentUpdatePage /></ProtectedRoute>} />
-          <Route path="/balance/:customerId" element={<ProtectedRoute><CustomerBalancePage /></ProtectedRoute>} />
-          <Route path="/backup" element={<ProtectedRoute><BackupPage /></ProtectedRoute>} />
-          <Route path="/pdf-editor/:customerId" element={<ProtectedRoute><PDFEditorPage /></ProtectedRoute>} />
-          <Route path="*" element={<NotFound />} />
+          {/* Customer ordering app route - no layout */}
+          <Route path="/order/:qrCode" element={<CustomerOrderPage />} />
+          
+          {/* Simple customer order page - no layout */}
+          <Route path="/simple-order/:qrCode" element={<CustomerOrderPageSimple />} />
+          
+          {/* Customer public page route - no layout */}
+          <Route path="/customer/:qrCode" element={<CustomerPublicPage />} />
+          
+          {/* Protected admin routes with layout */}
+          <Route path="/" element={<ProtectedRoute />}>
+            <Route path="/" element={<Layout />}>
+              {/* Root path redirects to dashboard */}
+              <Route index element={<Dashboard />} />
+              
+              {/* Order edit route */}
+              <Route 
+                path="orders/edit/:id" 
+                element={
+                  <React.Suspense fallback={<div>Loading...</div>}>
+                    <OrderFormPage />
+                  </React.Suspense>
+                } 
+              />
+              
+              {navItems.map(({ to, page }) => {
+                // Convert absolute paths to relative paths for nested routing
+                const relativePath = to === "/" ? "" : to.startsWith("/") ? to.slice(1) : to;
+                return (
+                  <Route key={to} path={relativePath} element={page} />
+                );
+              })}
+            </Route>
+          </Route>
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
