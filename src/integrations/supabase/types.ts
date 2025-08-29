@@ -17,10 +17,12 @@ export type Database = {
       customers: {
         Row: {
           created_at: string
+          customer_code: string | null
           id: string
           location: string | null
           mobile: string
           name: string
+          old_balance: number | null
           photo_url: string | null
           qr_code: string | null
           shop_name: string | null
@@ -28,10 +30,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          customer_code?: string | null
           id?: string
           location?: string | null
           mobile: string
           name: string
+          old_balance?: number | null
           photo_url?: string | null
           qr_code?: string | null
           shop_name?: string | null
@@ -39,10 +43,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          customer_code?: string | null
           id?: string
           location?: string | null
           mobile?: string
           name?: string
+          old_balance?: number | null
           photo_url?: string | null
           qr_code?: string | null
           shop_name?: string | null
@@ -225,9 +231,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_customer_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_qr_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      reset_customer_billing_data: {
+        Args: { customer_uuid: string }
+        Returns: undefined
       }
     }
     Enums: {

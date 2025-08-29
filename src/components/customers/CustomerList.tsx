@@ -30,7 +30,8 @@ const CustomerList: React.FC<CustomerListProps> = ({
   const filteredCustomers = customers.filter((customer) =>
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     customer.mobile.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (customer.shop_name && customer.shop_name.toLowerCase().includes(searchQuery.toLowerCase()))
+    (customer.shop_name && customer.shop_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (customer.customer_code && customer.customer_code.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -41,7 +42,7 @@ const CustomerList: React.FC<CustomerListProps> = ({
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search customers..."
+            placeholder="Search customers by name, mobile, shop, or customer ID..."
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -55,6 +56,7 @@ const CustomerList: React.FC<CustomerListProps> = ({
               <TableHeader>
                 <TableRow>
                   <TableHead>Photo</TableHead>
+                  <TableHead>Customer ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Mobile</TableHead>
                   <TableHead className="hidden md:table-cell">Shop</TableHead>
@@ -77,6 +79,9 @@ const CustomerList: React.FC<CustomerListProps> = ({
                           {customer.name.charAt(0).toUpperCase()}
                         </div>
                       )}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {customer.customer_code || 'N/A'}
                     </TableCell>
                     <TableCell className="font-medium">{customer.name}</TableCell>
                     <TableCell>{customer.mobile}</TableCell>

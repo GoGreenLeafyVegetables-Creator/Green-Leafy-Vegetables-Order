@@ -3,14 +3,16 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, Trash2, Edit } from "lucide-react";
+import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, Trash2, Edit, ExternalLink } from "lucide-react";
 import { Customer } from "@/types/customer";
-import { useCustomerAnalytics, useDeleteOrder, useDeleteCustomer } from "@/hooks/use-supabase-data";
+import { useCustomerAnalytics } from "@/hooks/use-supabase-data";
+import { useUpdateCustomerOldBalance, useResetCustomerBillingData } from "@/hooks/use-customer-balance";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import CustomerQRCode from "./CustomerQRCode";
 import CustomerPDFReport from "./CustomerPDFReport";
-import CustomerPDFEditor from "./CustomerPDFEditor";
 import CustomerOrderHistoryDeleteDialog from "./CustomerOrderHistoryDeleteDialog";
+import OldBalanceUpdateDialog from "./OldBalanceUpdateDialog";
 
 interface CustomerManagementProps {
   customer: Customer;
@@ -19,10 +21,12 @@ interface CustomerManagementProps {
 const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => {
   const [showQR, setShowQR] = useState(false);
   const [showPDF, setShowPDF] = useState(false);
-  const [showPDFEditor, setShowPDFEditor] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showBalanceDialog, setShowBalanceDialog] = useState(false);
   const { toast } = useToast();
-  const deleteCustomer = useDeleteCustomer();
+  const navigate = useNavigate();
+  const resetCustomerData = useResetCustomerBillingData();
+  const updateOldBalance = useUpdateCustomerOldBalance();
   
   // Add safety check for customer
   if (!customer) {
@@ -39,21 +43,22 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
 
   const { data: analytics, isLoading } = useCustomerAnalytics(customer.id);
 
-  const getStatusBadge = (balance: number) => {
-    if (balance === 0) return <Badge className="bg-green-500">No Dues</Badge>;
-    if (balance > 0) return <Badge variant="destructive">₹{balance.toFixed(2)} Due</Badge>;
-    return <Badge className="bg-blue-500">₹{Math.abs(balance).toFixed(2)} Advance</Badge>;
+  const getStatusBadge = (balance: number, oldBalance: number = 0) => {
+    const totalBalance = balance + oldBalance;
+    if (totalBalance === 0) return <Badge className="bg-green-500">No Dues</Badge>;
+    if (totalBalance > 0) return <Badge variant="destructive">₹{totalBalance.toFixed(2)} Due</Badge>;
+    return <Badge className="bg-blue-500">₹{Math.abs(totalBalance).toFixed(2)} Advance</Badge>;
   };
 
-  const handleDeleteCustomerData = async (customerId: string) => {
+  const handleResetCustomerData = async (customerId: string) => {
     try {
-      await deleteCustomer.mutateAsync(customerId);
+      await resetCustomerData.mutateAsync(customerId);
       toast({
         title: "Customer Data Reset",
         description: "All previous records cleared. Customer now has fresh billing start with ₹0 balance.",
       });
     } catch (error) {
-      console.error('Error deleting customer data:', error);
+      console.error('Error resetting customer data:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -62,13 +67,37 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
     }
   };
 
+  const handleUpdateOldBalance = async (customerId: string, newBalance: number) => {
+    try {
+      await updateOldBalance.mutateAsync({ customerId, oldBalance: newBalance });
+      toast({
+        title: "Old Balance Updated",
+        description: `Old balance updated to ₹${newBalance.toFixed(2)} for ${customer.name}`,
+      });
+    } catch (error) {
+      console.error('Error updating old balance:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update old balance. Please try again.",
+      });
+    }
+  };
+
+  const handleEditPDF = () => {
+    navigate(`/customers/${customer.id}/pdf-editor`);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="text-xl">{customer.name}</CardTitle>
-            <div className="flex flex-col gap-1 mt-2 text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground mb-2">
+              Customer ID: <span className="font-mono">{customer.customer_code}</span>
+            </div>
+            <div className="flex flex-col gap-1 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Phone className="h-3 w-3" />
                 {customer.mobile}
@@ -91,6 +120,14 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
             <Button
               size="sm"
               variant="outline"
+              onClick={() => setShowBalanceDialog(true)}
+            >
+              <IndianRupee className="h-4 w-4 mr-1" />
+              Old Balance
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => setShowQR(true)}
             >
               <QrCode className="h-4 w-4 mr-1" />
@@ -107,9 +144,10 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setShowPDFEditor(true)}
+              onClick={handleEditPDF}
             >
               <Edit className="h-4 w-4 mr-1" />
+              <ExternalLink className="h-3 w-3" />
               Edit PDF
             </Button>
             <Button
@@ -128,7 +166,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
         {isLoading ? (
           <div>Loading analytics...</div>
         ) : analytics ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="text-center p-3 bg-blue-50 rounded-lg">
               <Calendar className="h-5 w-5 mx-auto mb-1 text-blue-600" />
               <div className="text-lg font-semibold text-blue-800">₹{analytics.monthlyTotal.toFixed(2)}</div>
@@ -146,12 +184,18 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
               <div className="text-lg font-semibold text-purple-800">{analytics.totalOrders}</div>
               <div className="text-xs text-purple-600">Total Orders</div>
             </div>
+
+            <div className="text-center p-3 bg-amber-50 rounded-lg">
+              <IndianRupee className="h-5 w-5 mx-auto mb-1 text-amber-600" />
+              <div className="text-lg font-semibold text-amber-800">₹{(customer.old_balance || 0).toFixed(2)}</div>
+              <div className="text-xs text-amber-600">Old Balance</div>
+            </div>
             
             <div className="text-center p-3 bg-orange-50 rounded-lg">
               <div className="flex justify-center mb-1">
-                {getStatusBadge(analytics.totalBalance)}
+                {getStatusBadge(analytics.totalBalance, customer.old_balance || 0)}
               </div>
-              <div className="text-xs text-orange-600">Balance Status</div>
+              <div className="text-xs text-orange-600">Total Balance</div>
             </div>
           </div>
         ) : null}
@@ -179,20 +223,21 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
         />
       )}
 
-      {showPDFEditor && analytics && (
-        <CustomerPDFEditor
-          customer={customer}
-          analytics={analytics}
-          onClose={() => setShowPDFEditor(false)}
-        />
-      )}
-
       {showDeleteDialog && (
         <CustomerOrderHistoryDeleteDialog
           customer={customer}
           isOpen={showDeleteDialog}
           onClose={() => setShowDeleteDialog(false)}
-          onConfirm={handleDeleteCustomerData}
+          onConfirm={handleResetCustomerData}
+        />
+      )}
+
+      {showBalanceDialog && (
+        <OldBalanceUpdateDialog
+          customer={customer}
+          isOpen={showBalanceDialog}
+          onClose={() => setShowBalanceDialog(false)}
+          onUpdate={handleUpdateOldBalance}
         />
       )}
     </Card>

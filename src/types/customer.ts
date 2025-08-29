@@ -7,6 +7,8 @@ export interface Customer {
   location?: string;
   photo_url?: string;
   qr_code?: string;
+  customer_code?: string;
+  old_balance?: number;
   created_at?: string;
   updated_at?: string;
 }
