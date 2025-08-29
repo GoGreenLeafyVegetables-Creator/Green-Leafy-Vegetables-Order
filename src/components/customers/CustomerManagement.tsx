@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, RefreshCw } from "lucide-react";
 import { Customer } from "@/types/customer";
 import { useCustomerAnalytics, useDeleteCustomer } from "@/hooks/use-supabase-data";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import CustomerQRCode from "./CustomerQRCode";
 import CustomerPDFReportEnhanced from "./CustomerPDFReportEnhanced";
 import CustomerOrderHistoryDeleteDialog from "./CustomerOrderHistoryDeleteDialog";

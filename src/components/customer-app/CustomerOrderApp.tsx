@@ -1,8 +1,9 @@
+
 import React from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCustomers, useVegetables, useCreateCustomerOrder } from "@/hooks/use-supabase-data";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import CustomerOrderForm from "./CustomerOrderForm";
 import { Store, Phone, MapPin } from "lucide-react";
 import { Order } from "@/types/order";
