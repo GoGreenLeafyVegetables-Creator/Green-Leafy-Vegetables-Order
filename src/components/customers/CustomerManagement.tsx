@@ -3,12 +3,13 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, Trash2 } from "lucide-react";
+import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, Trash2, Edit } from "lucide-react";
 import { Customer } from "@/types/customer";
 import { useCustomerAnalytics, useDeleteOrder, useDeleteCustomer } from "@/hooks/use-supabase-data";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import CustomerQRCode from "./CustomerQRCode";
 import CustomerPDFReport from "./CustomerPDFReport";
+import CustomerPDFEditor from "./CustomerPDFEditor";
 import CustomerOrderHistoryDeleteDialog from "./CustomerOrderHistoryDeleteDialog";
 
 interface CustomerManagementProps {
@@ -18,6 +19,7 @@ interface CustomerManagementProps {
 const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => {
   const [showQR, setShowQR] = useState(false);
   const [showPDF, setShowPDF] = useState(false);
+  const [showPDFEditor, setShowPDFEditor] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
   const deleteCustomer = useDeleteCustomer();
@@ -47,15 +49,15 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
     try {
       await deleteCustomer.mutateAsync(customerId);
       toast({
-        title: "Customer Data Deleted",
-        description: "All customer data including orders, payments, and profile have been permanently deleted",
+        title: "Customer Data Reset",
+        description: "All previous records cleared. Customer now has fresh billing start with ₹0 balance.",
       });
     } catch (error) {
       console.error('Error deleting customer data:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete customer data. Please try again.",
+        description: "Failed to reset customer data. Please try again.",
       });
     }
   };
@@ -85,7 +87,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
               )}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               size="sm"
               variant="outline"
@@ -104,11 +106,19 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
             </Button>
             <Button
               size="sm"
+              variant="outline"
+              onClick={() => setShowPDFEditor(true)}
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit PDF
+            </Button>
+            <Button
+              size="sm"
               variant="destructive"
               onClick={() => setShowDeleteDialog(true)}
             >
               <Trash2 className="h-4 w-4 mr-1" />
-              Delete History
+              Reset Data
             </Button>
           </div>
         </div>
@@ -166,6 +176,14 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
           customer={customer}
           analytics={analytics}
           onClose={() => setShowPDF(false)}
+        />
+      )}
+
+      {showPDFEditor && analytics && (
+        <CustomerPDFEditor
+          customer={customer}
+          analytics={analytics}
+          onClose={() => setShowPDFEditor(false)}
         />
       )}
 
