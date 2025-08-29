@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Customer } from "@/types/customer";
 import { Vegetable } from "@/types/vegetable";
 import { useCreateOrder } from "@/hooks/use-supabase-data";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { ShoppingCart, Plus, Minus, Calendar } from "lucide-react";
 
 interface CartItem {

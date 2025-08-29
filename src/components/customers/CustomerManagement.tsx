@@ -3,12 +3,12 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, RefreshCw } from "lucide-react";
+import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, Trash2 } from "lucide-react";
 import { Customer } from "@/types/customer";
-import { useCustomerAnalytics, useDeleteCustomer } from "@/hooks/use-supabase-data";
-import { useToast } from "@/hooks/use-toast";
+import { useCustomerAnalytics, useDeleteOrder, useDeleteCustomer } from "@/hooks/use-supabase-data";
+import { useToast } from "@/components/ui/use-toast";
 import CustomerQRCode from "./CustomerQRCode";
-import CustomerPDFReportEnhanced from "./CustomerPDFReportEnhanced";
+import CustomerPDFReport from "./CustomerPDFReport";
 import CustomerOrderHistoryDeleteDialog from "./CustomerOrderHistoryDeleteDialog";
 
 interface CustomerManagementProps {
@@ -47,15 +47,15 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
     try {
       await deleteCustomer.mutateAsync(customerId);
       toast({
-        title: "Customer Billing Reset",
-        description: "All customer order and payment history has been cleared. Customer can start fresh with new orders.",
+        title: "Customer Data Deleted",
+        description: "All customer data including orders, payments, and profile have been permanently deleted",
       });
     } catch (error) {
-      console.error('Error resetting customer billing:', error);
+      console.error('Error deleting customer data:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to reset customer billing. Please try again.",
+        description: "Failed to delete customer data. Please try again.",
       });
     }
   };
@@ -63,8 +63,8 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-          <div className="flex-1">
+        <div className="flex justify-between items-start">
+          <div>
             <CardTitle className="text-xl">{customer.name}</CardTitle>
             <div className="flex flex-col gap-1 mt-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
@@ -85,7 +85,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
               )}
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -98,19 +98,17 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
               size="sm"
               variant="outline"
               onClick={() => setShowPDF(true)}
-              className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 hover:from-blue-100 hover:to-purple-100"
             >
               <FileText className="h-4 w-4 mr-1" />
               PDF Report
             </Button>
             <Button
               size="sm"
-              variant="outline"
-              className="text-orange-600 border-orange-200 hover:bg-orange-50"
+              variant="destructive"
               onClick={() => setShowDeleteDialog(true)}
             >
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Reset Billing
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete History
             </Button>
           </div>
         </div>
@@ -164,7 +162,7 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
       )}
       
       {showPDF && analytics && (
-        <CustomerPDFReportEnhanced
+        <CustomerPDFReport
           customer={customer}
           analytics={analytics}
           onClose={() => setShowPDF(false)}
