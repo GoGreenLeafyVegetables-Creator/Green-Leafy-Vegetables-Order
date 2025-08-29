@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ interface CustomerPDFEditorProps {
   customer: Customer;
   analytics: any;
   onClose: () => void;
+  isFullPage?: boolean;
 }
 
 interface EditableElement {
@@ -30,7 +30,12 @@ interface EditableElement {
   color?: string;
 }
 
-const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({ customer, analytics, onClose }) => {
+const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({ 
+  customer, 
+  analytics, 
+  onClose, 
+  isFullPage = false 
+}) => {
   const { data: orders = [] } = useOrders();
   const { data: vegetables = [] } = useVegetables();
   const { toast } = useToast();
@@ -273,121 +278,132 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({ customer, analyti
     printWindow.print();
   };
 
+  const editorContent = (
+    <div className="flex gap-4 h-[70vh]">
+      <div className="w-64 space-y-4 overflow-y-auto">
+        <div>
+          <h4 className="font-semibold mb-2">Add Elements</h4>
+          <div className="space-y-2">
+            <Button onClick={addTextElement} className="w-full" size="sm">
+              <Type className="h-4 w-4 mr-2" />
+              Add Text
+            </Button>
+            <Button onClick={addImageElement} className="w-full" size="sm">
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Add Image
+            </Button>
+          </div>
+        </div>
+
+        {selectedElement && (
+          <div className="space-y-2">
+            <h4 className="font-semibold">Edit Selected</h4>
+            {elements.find(el => el.id === selectedElement)?.type === 'text' && (
+              <>
+                <Textarea
+                  value={elements.find(el => el.id === selectedElement)?.content || ''}
+                  onChange={(e) => updateElement(selectedElement, { content: e.target.value })}
+                  placeholder="Text content"
+                  rows={3}
+                />
+                <Input
+                  type="number"
+                  value={elements.find(el => el.id === selectedElement)?.fontSize || 14}
+                  onChange={(e) => updateElement(selectedElement, { fontSize: parseInt(e.target.value) })}
+                  placeholder="Font size"
+                />
+                <Input
+                  type="color"
+                  value={elements.find(el => el.id === selectedElement)?.color || '#000000'}
+                  onChange={(e) => updateElement(selectedElement, { color: e.target.value })}
+                />
+              </>
+            )}
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Button onClick={savePDFLayout} className="w-full">
+            <Save className="h-4 w-4 mr-2" />
+            Save Layout
+          </Button>
+          <Button onClick={generatePDF} className="w-full">
+            <Download className="h-4 w-4 mr-2" />
+            Generate PDF
+          </Button>
+        </div>
+      </div>
+
+      <div 
+        ref={editorRef}
+        className="flex-1 bg-white border rounded-lg relative overflow-auto"
+        style={{ minHeight: '800px' }}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      >
+        {elements.map(element => (
+          <div
+            key={element.id}
+            className={`absolute cursor-move border-2 ${
+              selectedElement === element.id ? 'border-blue-500' : 'border-transparent'
+            } hover:border-gray-300`}
+            style={{
+              left: element.x,
+              top: element.y,
+              width: element.width,
+              height: element.height,
+              fontSize: element.fontSize || 14,
+              fontWeight: element.fontWeight || 'normal',
+              color: element.color || '#000'
+            }}
+            onMouseDown={(e) => handleMouseDown(element.id, e)}
+          >
+            {element.type === 'text' && (
+              <div className="w-full h-full flex items-center">
+                {element.content}
+              </div>
+            )}
+            {element.type === 'image' && (
+              <img 
+                src={element.content} 
+                alt="Element" 
+                className="w-full h-full object-cover"
+              />
+            )}
+            {element.type === 'qr' && (
+              <img 
+                src={element.content} 
+                alt="QR Code" 
+                className="w-full h-full object-contain"
+              />
+            )}
+            {selectedElement === element.id && (
+              <div className="absolute -top-6 left-0 bg-blue-500 text-white px-2 py-1 text-xs rounded">
+                <Move className="h-3 w-3 inline mr-1" />
+                Drag to move
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (isFullPage) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        {editorContent}
+      </div>
+    );
+  }
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Edit PDF Report - {customer.name}</DialogTitle>
         </DialogHeader>
-        
-        <div className="flex gap-4 h-[70vh]">
-          <div className="w-64 space-y-4 overflow-y-auto">
-            <div>
-              <h4 className="font-semibold mb-2">Add Elements</h4>
-              <div className="space-y-2">
-                <Button onClick={addTextElement} className="w-full" size="sm">
-                  <Type className="h-4 w-4 mr-2" />
-                  Add Text
-                </Button>
-                <Button onClick={addImageElement} className="w-full" size="sm">
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  Add Image
-                </Button>
-              </div>
-            </div>
-
-            {selectedElement && (
-              <div className="space-y-2">
-                <h4 className="font-semibold">Edit Selected</h4>
-                {elements.find(el => el.id === selectedElement)?.type === 'text' && (
-                  <>
-                    <Textarea
-                      value={elements.find(el => el.id === selectedElement)?.content || ''}
-                      onChange={(e) => updateElement(selectedElement, { content: e.target.value })}
-                      placeholder="Text content"
-                      rows={3}
-                    />
-                    <Input
-                      type="number"
-                      value={elements.find(el => el.id === selectedElement)?.fontSize || 14}
-                      onChange={(e) => updateElement(selectedElement, { fontSize: parseInt(e.target.value) })}
-                      placeholder="Font size"
-                    />
-                    <Input
-                      type="color"
-                      value={elements.find(el => el.id === selectedElement)?.color || '#000000'}
-                      onChange={(e) => updateElement(selectedElement, { color: e.target.value })}
-                    />
-                  </>
-                )}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Button onClick={savePDFLayout} className="w-full">
-                <Save className="h-4 w-4 mr-2" />
-                Save Layout
-              </Button>
-              <Button onClick={generatePDF} className="w-full">
-                <Download className="h-4 w-4 mr-2" />
-                Generate PDF
-              </Button>
-            </div>
-          </div>
-
-          <div 
-            ref={editorRef}
-            className="flex-1 bg-white border rounded-lg relative overflow-auto"
-            style={{ minHeight: '800px' }}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-          >
-            {elements.map(element => (
-              <div
-                key={element.id}
-                className={`absolute cursor-move border-2 ${
-                  selectedElement === element.id ? 'border-blue-500' : 'border-transparent'
-                } hover:border-gray-300`}
-                style={{
-                  left: element.x,
-                  top: element.y,
-                  width: element.width,
-                  height: element.height,
-                  fontSize: element.fontSize || 14,
-                  fontWeight: element.fontWeight || 'normal',
-                  color: element.color || '#000'
-                }}
-                onMouseDown={(e) => handleMouseDown(element.id, e)}
-              >
-                {element.type === 'text' && (
-                  <div className="w-full h-full flex items-center">
-                    {element.content}
-                  </div>
-                )}
-                {element.type === 'image' && (
-                  <img 
-                    src={element.content} 
-                    alt="Element" 
-                    className="w-full h-full object-cover"
-                  />
-                )}
-                {element.type === 'qr' && (
-                  <img 
-                    src={element.content} 
-                    alt="QR Code" 
-                    className="w-full h-full object-contain"
-                  />
-                )}
-                {selectedElement === element.id && (
-                  <div className="absolute -top-6 left-0 bg-blue-500 text-white px-2 py-1 text-xs rounded">
-                    <Move className="h-3 w-3 inline mr-1" />
-                    Drag to move
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        {editorContent}
       </DialogContent>
     </Dialog>
   );

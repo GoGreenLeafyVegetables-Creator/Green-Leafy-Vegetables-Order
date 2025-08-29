@@ -1,51 +1,33 @@
 
-import React, { useEffect, useState } from "react";
-import { useNavigate, Outlet, useLocation } from "react-router-dom";
+import { ReactNode } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
-const ProtectedRoute = () => {
-  const navigate = useNavigate();
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const location = useLocation();
-  const [isChecking, setIsChecking] = useState(true);
-  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+  
+  const { data: session, isLoading } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    }
+  });
 
-  useEffect(() => {
-    const checkAuth = () => {
-      if (!isAuthenticated) {
-        // Clear any existing state and redirect to login
-        localStorage.clear();
-        navigate("/login", { replace: true });
-      } else {
-        setIsChecking(false);
-      }
-    };
-
-    checkAuth();
-    
-    // Also check on storage changes (logout from another tab)
-    const handleStorageChange = () => {
-      const currentAuth = localStorage.getItem("isAuthenticated") === "true";
-      if (!currentAuth) {
-        navigate("/login", { replace: true });
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [isAuthenticated, navigate, location.pathname]);
-
-  // Show loading state while checking authentication
-  if (isChecking || !isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking authentication...</p>
-        </div>
-      </div>
-    );
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  return <Outlet />;
+  if (!session) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;
