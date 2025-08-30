@@ -41,20 +41,30 @@ export const useResetCustomerBillingData = () => {
       console.log('Resetting customer billing data for:', customerId);
       
       try {
-        // First delete order items
-        const { error: orderItemsError } = await supabase
-          .from('order_items')
-          .delete()
-          .in('order_id', 
-            supabase
-              .from('orders')
-              .select('id')
-              .eq('customer_id', customerId)
-          );
+        // First get all order IDs for this customer
+        const { data: orderIds, error: orderIdsError } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('customer_id', customerId);
         
-        if (orderItemsError) {
-          console.error('Error deleting order items:', orderItemsError);
-          throw orderItemsError;
+        if (orderIdsError) {
+          console.error('Error fetching order IDs:', orderIdsError);
+          throw orderIdsError;
+        }
+        
+        // Delete order items if there are orders
+        if (orderIds && orderIds.length > 0) {
+          const orderIdList = orderIds.map(order => order.id);
+          
+          const { error: orderItemsError } = await supabase
+            .from('order_items')
+            .delete()
+            .in('order_id', orderIdList);
+          
+          if (orderItemsError) {
+            console.error('Error deleting order items:', orderItemsError);
+            throw orderItemsError;
+          }
         }
         
         // Then delete orders
