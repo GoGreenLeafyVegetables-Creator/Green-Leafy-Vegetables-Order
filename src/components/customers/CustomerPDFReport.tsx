@@ -3,7 +3,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Customer } from "@/types/customer";
-import { useOrders, useVegetables } from "@/hooks/use-supabase-data";
+import { useOrders, useVegetables, usePayments } from "@/hooks/use-supabase-data";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,12 +17,18 @@ interface CustomerPDFReportProps {
 const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analytics, onClose }) => {
   const { data: orders = [] } = useOrders();
   const { data: vegetables = [] } = useVegetables();
+  const { data: allPayments = [] } = usePayments();
   const { toast } = useToast();
   
   // Filter orders for this customer and sort by date
   const customerOrders = orders
     .filter(order => order.customer_id === customer.id)
     .sort((a, b) => new Date(b.order_date).getTime() - new Date(a.order_date).getTime());
+
+  // Filter old balance payments (payments without order_id)
+  const oldBalancePayments = allPayments.filter(payment => 
+    payment.customer_id === customer.id && !payment.order_id
+  );
 
   const generateCustomerPageQR = () => {
     const customerUrl = `${window.location.origin}/customer/${customer.qr_code}`;
@@ -62,6 +68,12 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
   const generatePDF = async () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+
+    // Calculate balances
+    const totalCurrentBalance = customerOrders.reduce((sum, order) => sum + (order.total_amount - order.paid_amount), 0);
+    const totalOldBalancePayments = oldBalancePayments.reduce((sum, payment) => sum + payment.amount, 0);
+    const actualOldBalance = (customer.old_balance || 0) - totalOldBalancePayments;
+    const totalWithOldBalance = totalCurrentBalance + actualOldBalance;
     
     // Helper function to get order items HTML with images
     const getOrderItemsHtml = (order: any) => {
@@ -86,6 +98,36 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
           </tr>
         `;
       }).join('');
+    };
+
+    // Helper function to generate old balance payments HTML
+    const getOldBalancePaymentsHtml = () => {
+      if (oldBalancePayments.length === 0) {
+        return '<div style="text-align: center; color: #666; padding: 20px;">No old balance payments recorded.</div>';
+      }
+
+      return `
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <thead>
+            <tr style="background: #f8f9fa;">
+              <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Payment Date</th>
+              <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Amount</th>
+              <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Method</th>
+              <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${oldBalancePayments.map(payment => `
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">${format(new Date(payment.payment_date), "dd/MM/yyyy")}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; color: #059669; font-weight: bold;">₹${payment.amount.toFixed(2)}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-transform: uppercase;">${payment.payment_method}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">${payment.notes || '-'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
     };
 
     // Helper function to generate order details HTML with proper pagination
@@ -269,6 +311,27 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
               font-weight: bold; 
               color: #22c55e; 
             }
+            .balance-section { 
+              background: #f8f9fa;
+              padding: 20px; 
+              border-radius: 10px; 
+              margin: 30px 0; 
+              border-left: 5px solid #22c55e;
+              break-inside: avoid;
+            }
+            .balance-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 15px;
+              margin: 15px 0;
+            }
+            .balance-item {
+              text-align: center;
+              padding: 15px;
+              background: white;
+              border-radius: 8px;
+              border: 1px solid #e5e7eb;
+            }
             .balance-status { 
               padding: 15px; 
               border-radius: 8px; 
@@ -382,6 +445,41 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
               </div>
             </div>
           </div>
+
+          <div class="balance-section">
+            <h2>Balance Information</h2>
+            <div class="balance-grid">
+              <div class="balance-item">
+                <div style="font-size: 18px; font-weight: bold; color: #d97706;">₹${(customer.old_balance || 0).toFixed(2)}</div>
+                <div style="font-size: 12px; color: #92400e;">Original Old Balance</div>
+              </div>
+              <div class="balance-item">
+                <div style="font-size: 18px; font-weight: bold; color: #059669;">₹${totalOldBalancePayments.toFixed(2)}</div>
+                <div style="font-size: 12px; color: #047857;">Old Balance Payments</div>
+              </div>
+              <div class="balance-item">
+                <div style="font-size: 18px; font-weight: bold; color: #dc2626;">₹${actualOldBalance.toFixed(2)}</div>
+                <div style="font-size: 12px; color: #991b1b;">Remaining Old Balance</div>
+              </div>
+              <div class="balance-item">
+                <div style="font-size: 18px; font-weight: bold; color: #2563eb;">₹${totalCurrentBalance.toFixed(2)}</div>
+                <div style="font-size: 12px; color: #1d4ed8;">Current Orders Balance</div>
+              </div>
+              <div class="balance-item">
+                <div style="font-size: 20px; font-weight: bold; color: ${totalWithOldBalance > 0 ? '#dc2626' : totalWithOldBalance < 0 ? '#059669' : '#666'};">
+                  ₹${totalWithOldBalance.toFixed(2)}
+                </div>
+                <div style="font-size: 12px; color: #666;">Total Outstanding Balance</div>
+              </div>
+            </div>
+          </div>
+
+          ${oldBalancePayments.length > 0 ? `
+            <div class="orders-section">
+              <h3>📋 Old Balance Payment History (${oldBalancePayments.length} Payments)</h3>
+              ${getOldBalancePaymentsHtml()}
+            </div>
+          ` : ''}
           
           <div class="analytics-grid">
             <div class="analytics-card">
@@ -402,22 +500,22 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
             </div>
           </div>
           
-          <div class="balance-status ${analytics.totalBalance === 0 ? 'balance-zero' : analytics.totalBalance > 0 ? 'balance-positive' : 'balance-negative'}">
-            ${analytics.totalBalance === 0 
+          <div class="balance-status ${totalWithOldBalance === 0 ? 'balance-zero' : totalWithOldBalance > 0 ? 'balance-positive' : 'balance-negative'}">
+            ${totalWithOldBalance === 0 
               ? '✅ No Outstanding Balance - All payments are up to date' 
-              : analytics.totalBalance > 0 
-                ? `⚠️ Outstanding Amount: ₹${analytics.totalBalance.toFixed(2)} - Payment pending` 
-                : `💰 Advance Amount: ₹${Math.abs(analytics.totalBalance).toFixed(2)} - Credit available`
+              : totalWithOldBalance > 0 
+                ? `⚠️ Outstanding Amount: ₹${totalWithOldBalance.toFixed(2)} - Payment pending` 
+                : `💰 Advance Amount: ₹${Math.abs(totalWithOldBalance).toFixed(2)} - Credit available`
             }
           </div>
           
-          ${analytics.totalBalance > 0 ? `
+          ${totalWithOldBalance > 0 ? `
             <div class="qr-grid">
               <div class="qr-item">
                 <h3>Pay Outstanding Balance</h3>
-                <img src="${generateUPIQRCode(analytics.totalBalance)}" alt="UPI Payment QR Code" style="width: 200px; height: 200px;">
+                <img src="${generateUPIQRCode(totalWithOldBalance)}" alt="UPI Payment QR Code" style="width: 200px; height: 200px;">
                 <p><strong>SHREE GANESHA GREEN LEAFY VEGETABLES</strong></p>
-                <p><strong>Amount:</strong> ₹${analytics.totalBalance.toFixed(2)}</p>
+                <p><strong>Amount:</strong> ₹${totalWithOldBalance.toFixed(2)}</p>
               </div>
               <div class="qr-item">
                 <h3>Access Your Orders</h3>
@@ -469,6 +567,8 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
           <ul className="list-disc list-inside text-sm space-y-1">
             <li>Complete customer information with photos</li>
             <li>Monthly and yearly business analytics</li>
+            <li>Detailed old balance tracking and payment history</li>
+            <li>Current orders balance vs old balance breakdown</li>
             <li>Detailed order history with product images</li>
             <li>Individual order items with vegetable photos</li>
             <li>Payment details and status tracking</li>
@@ -481,21 +581,23 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
           <div className="bg-blue-50 p-3 rounded-lg">
             <p className="text-sm text-blue-700">
               <strong>Orders Found:</strong> {customerOrders.length} orders
+              <br />
+              <strong>Old Balance Payments:</strong> {oldBalancePayments.length} payments
             </p>
             <p className="text-sm text-blue-600">
-              All order details with vegetable images, proper page breaks, and company branding will be included.
+              All order details with vegetable images, old balance information, proper page breaks, and company branding will be included.
             </p>
           </div>
           
           <div className="bg-green-50 p-3 rounded-lg">
             <p className="text-sm text-green-700">
-              <strong>Enhanced Features:</strong>
+              <strong>Enhanced Balance Features:</strong>
             </p>
             <ul className="text-xs text-green-600 list-disc ml-4">
-              <li>Vegetable images in order items</li>
-              <li>Company name shown with UPI QR (not UPI ID)</li>
-              <li>Smart page breaks to prevent content splitting</li>
-              <li>Automatic save to customer's secure folder</li>
+              <li>Original old balance tracking</li>
+              <li>Old balance payments with dates and methods</li>
+              <li>Remaining old balance calculation</li>
+              <li>Total balance including both current and old balances</li>
             </ul>
           </div>
           
