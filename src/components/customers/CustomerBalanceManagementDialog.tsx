@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,6 +87,14 @@ const CustomerBalanceManagementDialog: React.FC<CustomerBalanceManagementDialogP
     }
 
     try {
+      console.log('Attempting to create old balance payment with data:', {
+        customerId: customer.id,
+        amount: oldBalancePayment.amount,
+        paymentDate: oldBalancePayment.paymentDate,
+        paymentMethod: oldBalancePayment.paymentMethod,
+        notes: oldBalancePayment.notes
+      });
+      
       await createOldBalancePayment.mutateAsync({
         customerId: customer.id,
         amount: oldBalancePayment.amount,
@@ -108,11 +115,12 @@ const CustomerBalanceManagementDialog: React.FC<CustomerBalanceManagementDialogP
         paymentMethod: 'cash',
         notes: ''
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Failed to create old balance payment:', error);
       toast({
         variant: "destructive",
         title: "Payment Failed",
-        description: "Failed to record old balance payment. Please try again.",
+        description: error?.message || "Failed to record old balance payment. Please try again.",
       });
     }
   };
@@ -171,6 +179,9 @@ const CustomerBalanceManagementDialog: React.FC<CustomerBalanceManagementDialogP
             <IndianRupee className="h-5 w-5" />
             Balance Management - {customer.name}
           </DialogTitle>
+          <DialogDescription>
+            Manage customer balances, payments, and view financial history for {customer.name}
+          </DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto">
