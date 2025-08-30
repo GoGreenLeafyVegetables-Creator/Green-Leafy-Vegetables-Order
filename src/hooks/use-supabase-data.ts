@@ -251,6 +251,84 @@ export const useDeleteOrder = () => {
   });
 };
 
+// Payments
+export const usePayments = () => {
+  return useQuery({
+    queryKey: ['payments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .order('payment_date', { ascending: false });
+      
+      if (error) throw error;
+      return data as Payment[];
+    }
+  });
+};
+
+export const useCreatePayment = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (payment: Omit<Payment, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('payments')
+        .insert([payment])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Payment;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-analytics'] });
+    }
+  });
+};
+
+export const useUpdatePayment = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...payment }: Partial<Payment> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('payments')
+        .update(payment)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data as Payment;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-analytics'] });
+    }
+  });
+};
+
+export const useDeletePayment = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('payments')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-analytics'] });
+    }
+  });
+};
+
 // Customer order creation (simplified for customer app)
 export const useCreateCustomerOrder = () => {
   const queryClient = useQueryClient();
