@@ -3,16 +3,16 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, Trash2, Edit, ExternalLink } from "lucide-react";
+import { QrCode, FileText, IndianRupee, Calendar, Phone, MapPin, Store, Trash2, Edit, ExternalLink, Settings } from "lucide-react";
 import { Customer } from "@/types/customer";
 import { useCustomerAnalytics } from "@/hooks/use-supabase-data";
-import { useUpdateCustomerOldBalance, useResetCustomerBillingData } from "@/hooks/use-customer-balance";
+import { useResetCustomerBillingData } from "@/hooks/use-customer-balance";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import CustomerQRCode from "./CustomerQRCode";
 import CustomerPDFReport from "./CustomerPDFReport";
 import CustomerOrderHistoryDeleteDialog from "./CustomerOrderHistoryDeleteDialog";
-import OldBalanceUpdateDialog from "./OldBalanceUpdateDialog";
+import CustomerBalanceManagementDialog from "./CustomerBalanceManagementDialog";
 
 interface CustomerManagementProps {
   customer: Customer;
@@ -26,7 +26,6 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
   const { toast } = useToast();
   const navigate = useNavigate();
   const resetCustomerData = useResetCustomerBillingData();
-  const updateOldBalance = useUpdateCustomerOldBalance();
   
   // Add safety check for customer
   if (!customer) {
@@ -69,25 +68,6 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
     }
   };
 
-  const handleUpdateOldBalance = async (customerId: string, newBalance: number) => {
-    try {
-      console.log('Starting old balance update for:', customerId, 'New balance:', newBalance);
-      await updateOldBalance.mutateAsync({ customerId, oldBalance: newBalance });
-      toast({
-        title: "Old Balance Updated",
-        description: `Old balance updated to ₹${newBalance.toFixed(2)} for ${customer.name}`,
-      });
-      setShowBalanceDialog(false);
-    } catch (error) {
-      console.error('Error updating old balance:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update old balance. Please try again.",
-      });
-    }
-  };
-
   const handleEditPDF = () => {
     navigate(`/customers/${customer.id}/pdf-editor`);
   };
@@ -119,16 +99,18 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
                 </div>
               )}
             </div>
+            <div className="mt-2 text-xs text-green-600 font-medium">
+              Shree Ganesha Green Leafy Vegetables
+            </div>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button
               size="sm"
               variant="outline"
               onClick={() => setShowBalanceDialog(true)}
-              disabled={updateOldBalance.isPending}
             >
-              <IndianRupee className="h-4 w-4 mr-1" />
-              {updateOldBalance.isPending ? "Updating..." : "Old Balance"}
+              <Settings className="h-4 w-4 mr-1" />
+              Manage Balance
             </Button>
             <Button
               size="sm"
@@ -239,11 +221,10 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
       )}
 
       {showBalanceDialog && (
-        <OldBalanceUpdateDialog
+        <CustomerBalanceManagementDialog
           customer={customer}
           isOpen={showBalanceDialog}
           onClose={() => setShowBalanceDialog(false)}
-          onUpdate={handleUpdateOldBalance}
         />
       )}
     </Card>

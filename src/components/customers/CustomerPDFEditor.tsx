@@ -44,7 +44,7 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
     {
       id: 'company-name',
       type: 'text',
-      content: 'SHREE GANESHA GREEN LEAFY VEGETABLES',
+      content: 'Shree Ganesha Green Leafy Vegetables',
       x: 50,
       y: 50,
       width: 500,
@@ -73,6 +73,17 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
       width: 300,
       height: 25,
       fontSize: 14
+    },
+    {
+      id: 'old-balance-info',
+      type: 'text',
+      content: `Old Balance: ₹${(customer.old_balance || 0).toFixed(2)}`,
+      x: 400,
+      y: 120,
+      width: 200,
+      height: 25,
+      fontSize: 14,
+      color: '#d97706'
     }
   ]);
 
@@ -86,7 +97,7 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
     .sort((a, b) => new Date(b.order_date).getTime() - new Date(a.order_date).getTime());
 
   const generateUPIQRCode = (amount: number) => {
-    const upiString = `upi://pay?pa=chowdaryindianbank@ybl&pn=SHREE%20GANESHA%20GREEN%20LEAFY%20VEGETABLES&am=${amount}&cu=INR&tn=Customer%20${customer.qr_code}`;
+    const upiString = `upi://pay?pa=chowdaryindianbank@ybl&pn=Shree%20Ganesha%20Green%20Leafy%20Vegetables&am=${amount}&cu=INR&tn=Customer%20${customer.qr_code}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
   };
 
@@ -187,6 +198,8 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
+    const totalBalance = analytics.totalBalance + (customer.old_balance || 0);
+
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -236,6 +249,18 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
 
           <div style="position: absolute; top: 400px; left: 50px; width: 700px;">
             <h3 style="color: #22c55e; margin-bottom: 20px;">Order History</h3>
+            
+            ${customer.old_balance && customer.old_balance > 0 ? `
+              <div style="border: 2px solid #d97706; margin-bottom: 20px; border-radius: 8px; background: #fef3c7;">
+                <div style="background: #f59e0b; color: white; padding: 10px; font-weight: bold;">
+                  Old Balance (Previous Dues)
+                </div>
+                <div style="padding: 15px; font-size: 18px; font-weight: bold; color: #92400e;">
+                  ₹${customer.old_balance.toFixed(2)}
+                </div>
+              </div>
+            ` : ''}
+            
             ${customerOrders.map(order => `
               <div style="border: 1px solid #e5e7eb; margin-bottom: 20px; border-radius: 8px;">
                 <div style="background: #f9fafb; padding: 15px; border-bottom: 1px solid #e5e7eb;">
@@ -255,17 +280,48 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
                       </div>
                     `;
                   }).join('') : ''}
+                  <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                    <div style="display: flex; justify-content: space-between;">
+                      <span>Paid: ₹${order.paid_amount.toFixed(2)}</span>
+                      <span>Balance: ₹${(order.total_amount - order.paid_amount).toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             `).join('')}
+            
+            <div style="border: 2px solid #22c55e; margin-top: 30px; border-radius: 8px; background: #f0fdf4;">
+              <div style="background: #22c55e; color: white; padding: 15px; font-weight: bold; text-align: center;">
+                Total Balance Summary - Shree Ganesha Green Leafy Vegetables
+              </div>
+              <div style="padding: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                  <span>Current Orders Balance:</span>
+                  <span style="font-weight: bold;">₹${analytics.totalBalance.toFixed(2)}</span>
+                </div>
+                ${customer.old_balance && customer.old_balance > 0 ? `
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #d97706;">
+                    <span>Old Balance:</span>
+                    <span style="font-weight: bold;">₹${customer.old_balance.toFixed(2)}</span>
+                  </div>
+                ` : ''}
+                <hr style="margin: 15px 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold;">
+                  <span>Total Balance:</span>
+                  <span style="color: ${totalBalance > 0 ? '#dc2626' : totalBalance < 0 ? '#16a34a' : '#000'};">
+                    ₹${totalBalance.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          ${analytics.totalBalance > 0 ? `
+          ${totalBalance > 0 ? `
             <div style="position: absolute; bottom: 100px; left: 50px;">
               <h4>Payment QR Code</h4>
-              <img src="${generateUPIQRCode(analytics.totalBalance)}" alt="UPI Payment QR" style="width: 150px; height: 150px;" />
-              <p><strong>SHREE GANESHA GREEN LEAFY VEGETABLES</strong></p>
-              <p>Amount: ₹${analytics.totalBalance.toFixed(2)}</p>
+              <img src="${generateUPIQRCode(totalBalance)}" alt="UPI Payment QR" style="width: 150px; height: 150px;" />
+              <p><strong>Shree Ganesha Green Leafy Vegetables</strong></p>
+              <p>Total Amount: ₹${totalBalance.toFixed(2)}</p>
             </div>
           ` : ''}
         </body>
@@ -281,6 +337,13 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
   const editorContent = (
     <div className="flex gap-4 h-[70vh]">
       <div className="w-64 space-y-4 overflow-y-auto">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <p className="text-sm text-green-700 font-medium">
+            Shree Ganesha Green Leafy Vegetables
+          </p>
+          <p className="text-xs text-green-600">PDF Report Editor</p>
+        </div>
+        
         <div>
           <h4 className="font-semibold mb-2">Add Elements</h4>
           <div className="space-y-2">
@@ -401,7 +464,7 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Edit PDF Report - {customer.name}</DialogTitle>
+          <DialogTitle>Edit PDF Report - {customer.name} | Shree Ganesha Green Leafy Vegetables</DialogTitle>
         </DialogHeader>
         {editorContent}
       </DialogContent>
