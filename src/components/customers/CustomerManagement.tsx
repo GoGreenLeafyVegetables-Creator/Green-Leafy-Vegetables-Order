@@ -52,11 +52,13 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
 
   const handleResetCustomerData = async (customerId: string) => {
     try {
+      console.log('Starting customer data reset for:', customerId);
       await resetCustomerData.mutateAsync(customerId);
       toast({
         title: "Customer Data Reset",
         description: "All previous records cleared. Customer now has fresh billing start with ₹0 balance.",
       });
+      setShowDeleteDialog(false);
     } catch (error) {
       console.error('Error resetting customer data:', error);
       toast({
@@ -69,11 +71,13 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
 
   const handleUpdateOldBalance = async (customerId: string, newBalance: number) => {
     try {
+      console.log('Starting old balance update for:', customerId, 'New balance:', newBalance);
       await updateOldBalance.mutateAsync({ customerId, oldBalance: newBalance });
       toast({
         title: "Old Balance Updated",
         description: `Old balance updated to ₹${newBalance.toFixed(2)} for ${customer.name}`,
       });
+      setShowBalanceDialog(false);
     } catch (error) {
       console.error('Error updating old balance:', error);
       toast({
@@ -121,9 +125,10 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
               size="sm"
               variant="outline"
               onClick={() => setShowBalanceDialog(true)}
+              disabled={updateOldBalance.isPending}
             >
               <IndianRupee className="h-4 w-4 mr-1" />
-              Old Balance
+              {updateOldBalance.isPending ? "Updating..." : "Old Balance"}
             </Button>
             <Button
               size="sm"
@@ -154,9 +159,10 @@ const CustomerManagement: React.FC<CustomerManagementProps> = ({ customer }) => 
               size="sm"
               variant="destructive"
               onClick={() => setShowDeleteDialog(true)}
+              disabled={resetCustomerData.isPending}
             >
               <Trash2 className="h-4 w-4 mr-1" />
-              Reset Data
+              {resetCustomerData.isPending ? "Resetting..." : "Reset Data"}
             </Button>
           </div>
         </div>

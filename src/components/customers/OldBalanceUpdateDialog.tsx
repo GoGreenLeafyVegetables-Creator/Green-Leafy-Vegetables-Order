@@ -22,10 +22,14 @@ const OldBalanceUpdateDialog: React.FC<OldBalanceUpdateDialogProps> = ({
   onUpdate,
 }) => {
   const [balance, setBalance] = useState(customer.old_balance?.toString() || "0");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
+    
     const balanceAmount = parseFloat(balance);
     
     if (isNaN(balanceAmount)) {
@@ -37,11 +41,29 @@ const OldBalanceUpdateDialog: React.FC<OldBalanceUpdateDialogProps> = ({
       return;
     }
 
-    onUpdate(customer.id, balanceAmount);
-    onClose();
+    try {
+      setIsSubmitting(true);
+      console.log('Updating old balance for customer:', customer.id, 'New balance:', balanceAmount);
+      await onUpdate(customer.id, balanceAmount);
+      onClose();
+      toast({
+        title: "Balance Updated",
+        description: `Old balance updated to ₹${balanceAmount.toFixed(2)} successfully`,
+      });
+    } catch (error) {
+      console.error('Error updating old balance:', error);
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "Failed to update old balance. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
+    if (isSubmitting) return;
     setBalance(customer.old_balance?.toString() || "0");
     onClose();
   };
@@ -76,6 +98,7 @@ const OldBalanceUpdateDialog: React.FC<OldBalanceUpdateDialogProps> = ({
                 onChange={(e) => setBalance(e.target.value)}
                 placeholder="Enter old balance amount"
                 className="text-right"
+                disabled={isSubmitting}
               />
               <div className="text-xs text-muted-foreground">
                 Current old balance: ₹{customer.old_balance?.toFixed(2) || "0.00"}
@@ -90,11 +113,11 @@ const OldBalanceUpdateDialog: React.FC<OldBalanceUpdateDialogProps> = ({
           </div>
 
           <DialogFooter className="gap-2 mt-6">
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">
-              Update Balance
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Updating..." : "Update Balance"}
             </Button>
           </DialogFooter>
         </form>
