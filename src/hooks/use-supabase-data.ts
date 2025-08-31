@@ -182,30 +182,51 @@ export const useCreateOrder = () => {
   
   return useMutation({
     mutationFn: async ({ order, items }: { order: Omit<Order, 'id' | 'created_at' | 'updated_at'>, items: Omit<OrderItem, 'id' | 'order_id'>[] }) => {
+      console.log('Creating order with mutation:', { order, items });
+      
+      // Create the order first
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert([order])
         .select()
         .single();
       
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        throw orderError;
+      }
       
-      const orderItems = items.map(item => ({
-        ...item,
-        order_id: orderData.id
-      }));
+      console.log('Order created successfully:', orderData);
       
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-      
-      if (itemsError) throw itemsError;
+      // If there are items, insert them
+      if (items && items.length > 0) {
+        const orderItems = items.map(item => ({
+          ...item,
+          order_id: orderData.id
+        }));
+        
+        console.log('Inserting order items:', orderItems);
+        
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
+        
+        if (itemsError) {
+          console.error('Order items creation error:', itemsError);
+          throw itemsError;
+        }
+        
+        console.log('Order items created successfully');
+      }
       
       return orderData as Order;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['customer-analytics'] });
+    },
+    onError: (error) => {
+      console.error('Create order mutation error:', error);
     }
   });
 };
@@ -215,6 +236,8 @@ export const useUpdateOrder = () => {
   
   return useMutation({
     mutationFn: async ({ id, ...order }: Partial<Order> & { id: string }) => {
+      console.log('Updating order with mutation:', { id, order });
+      
       const { data, error } = await supabase
         .from('orders')
         .update(order)
@@ -222,12 +245,20 @@ export const useUpdateOrder = () => {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Order update error:', error);
+        throw error;
+      }
+      
+      console.log('Order updated successfully:', data);
       return data as Order;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['customer-analytics'] });
+    },
+    onError: (error) => {
+      console.error('Update order mutation error:', error);
     }
   });
 };

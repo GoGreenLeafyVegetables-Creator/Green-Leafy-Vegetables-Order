@@ -39,23 +39,25 @@ const OrderFormUpdate: React.FC<OrderFormUpdateProps> = ({
     initialData?.customer_id || preSelectedCustomerId || ""
   );
   const [items, setItems] = useState<OrderItem[]>(() => {
-    if (initialData?.order_items && initialData.order_items.length > 0) {
-      return vegetables.map(veg => {
-        const existingItem = initialData.order_items?.find(item => item.vegetable_id === veg.id);
-        return existingItem || {
-          vegetable_id: veg.id, 
-          quantity: 0,
-          unit_price: veg.price,
-          total_price: 0
+    // Initialize items with all vegetables
+    return vegetables.map(veg => {
+      // Check if there's existing data for this vegetable
+      const existingItem = initialData?.order_items?.find(item => item.vegetable_id === veg.id);
+      if (existingItem) {
+        return {
+          vegetable_id: veg.id,
+          quantity: existingItem.quantity,
+          unit_price: existingItem.unit_price,
+          total_price: existingItem.total_price
         };
-      });
-    }
-    return vegetables.map(veg => ({ 
-      vegetable_id: veg.id, 
-      quantity: 0,
-      unit_price: veg.price,
-      total_price: 0
-    }));
+      }
+      return {
+        vegetable_id: veg.id,
+        quantity: 0,
+        unit_price: veg.price,
+        total_price: 0
+      };
+    });
   });
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'mixed' | 'adjustment'>(
     initialData?.payment_method || 'cash'
@@ -65,6 +67,37 @@ const OrderFormUpdate: React.FC<OrderFormUpdateProps> = ({
   const [tempPrice, setTempPrice] = useState<number>(0);
 
   const { toast } = useToast();
+
+  // Update items when vegetables change
+  useEffect(() => {
+    if (vegetables.length > 0) {
+      setItems(prevItems => {
+        const newItems = vegetables.map(veg => {
+          const existingItem = prevItems.find(item => item.vegetable_id === veg.id);
+          const initialItem = initialData?.order_items?.find(item => item.vegetable_id === veg.id);
+          
+          if (existingItem) {
+            return existingItem;
+          } else if (initialItem) {
+            return {
+              vegetable_id: veg.id,
+              quantity: initialItem.quantity,
+              unit_price: initialItem.unit_price,
+              total_price: initialItem.total_price
+            };
+          } else {
+            return {
+              vegetable_id: veg.id,
+              quantity: 0,
+              unit_price: veg.price,
+              total_price: 0
+            };
+          }
+        });
+        return newItems;
+      });
+    }
+  }, [vegetables, initialData]);
 
   // Set pre-selected customer when component mounts
   useEffect(() => {
@@ -170,12 +203,13 @@ const OrderFormUpdate: React.FC<OrderFormUpdateProps> = ({
       return;
     }
 
-    const order: Order = {
-      id: initialData?.id || Date.now().toString(),
+    // Prepare order data
+    const orderData: Order = {
+      id: initialData?.id || '',
       order_date: date.toISOString().split('T')[0],
       customer_id: customerId,
       order_items: validItems,
-      created_at: initialData?.created_at || new Date().toISOString(),
+      created_at: initialData?.created_at,
       total_amount: total,
       payment_method: paymentMethod,
       payment_status: calculatePaymentStatus(total, paidAmount),
@@ -183,13 +217,8 @@ const OrderFormUpdate: React.FC<OrderFormUpdateProps> = ({
       balance_amount: total - paidAmount,
     };
 
-    console.log('Order data to save:', order);
-    onSave(order);
-
-    toast({
-      title: initialData ? "Order Updated" : "Order Created",
-      description: `Order has been ${initialData ? "updated" : "created"} successfully`,
-    });
+    console.log('Order data to save:', orderData);
+    onSave(orderData);
   };
 
   const selectedCustomer = customers.find(c => c.id === customerId);

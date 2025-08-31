@@ -24,15 +24,11 @@ const OrderFormPage = () => {
 
   const handleSave = async (orderData: Order) => {
     try {
-      const orderItems: Omit<OrderItem, 'id' | 'order_id'>[] = orderData.order_items?.map(item => ({
-        vegetable_id: item.vegetable_id,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price
-      })) || [];
-
+      console.log('Saving order:', orderData);
+      
       if (isEditing && id) {
-        await updateOrder.mutateAsync({
+        // Update existing order
+        const updateData = {
           id,
           customer_id: orderData.customer_id,
           order_date: orderData.order_date,
@@ -41,19 +37,41 @@ const OrderFormPage = () => {
           payment_method: orderData.payment_method,
           paid_amount: orderData.paid_amount,
           balance_amount: orderData.balance_amount
+        };
+
+        console.log('Updating order with data:', updateData);
+        await updateOrder.mutateAsync(updateData);
+        
+        toast({
+          title: "Order Updated",
+          description: "Order has been updated successfully",
         });
       } else {
+        // Create new order
+        const orderItems: Omit<OrderItem, 'id' | 'order_id'>[] = orderData.order_items?.map(item => ({
+          vegetable_id: item.vegetable_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price
+        })) || [];
+
         const newOrder = {
           customer_id: orderData.customer_id,
           order_date: orderData.order_date,
           total_amount: orderData.total_amount,
           payment_status: orderData.payment_status as 'pending' | 'partial' | 'paid',
-          payment_method: orderData.payment_method as 'cash' | 'upi' | 'mixed',
+          payment_method: orderData.payment_method as 'cash' | 'upi' | 'mixed' | 'adjustment',
           paid_amount: orderData.paid_amount,
           balance_amount: orderData.balance_amount
         };
-        
+
+        console.log('Creating order with data:', { order: newOrder, items: orderItems });
         await createOrder.mutateAsync({ order: newOrder, items: orderItems });
+        
+        toast({
+          title: "Order Created",
+          description: "Order has been created successfully",
+        });
       }
       
       navigate('/orders');
@@ -62,7 +80,7 @@ const OrderFormPage = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save order",
+        description: `Failed to ${isEditing ? 'update' : 'create'} order. Please try again.`,
       });
     }
   };
@@ -83,6 +101,23 @@ const OrderFormPage = () => {
           </p>
         </div>
         <div>Loading...</div>
+      </div>
+    );
+  }
+
+  // Show error if editing but no order found
+  if (isEditing && !initialData) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Order Not Found</h1>
+          <p className="text-muted-foreground">
+            The order you're trying to edit could not be found.
+          </p>
+        </div>
+        <button onClick={() => navigate('/orders')} className="text-blue-600 hover:underline">
+          Back to Orders
+        </button>
       </div>
     );
   }
