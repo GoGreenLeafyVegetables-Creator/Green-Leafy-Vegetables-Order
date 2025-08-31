@@ -1,11 +1,10 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Customer } from "@/types/customer";
 import { useOrders, useVegetables, usePayments } from "@/hooks/use-supabase-data";
+import { useSavePDFReport } from "@/hooks/use-pdf-reports";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface CustomerPDFReportProps {
@@ -19,6 +18,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
   const { data: vegetables = [] } = useVegetables();
   const { data: allPayments = [] } = usePayments();
   const { toast } = useToast();
+  const savePDFReport = useSavePDFReport();
   
   // Filter orders for this customer and sort by date
   const customerOrders = orders
@@ -29,6 +29,12 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
   const oldBalancePayments = allPayments.filter(payment => 
     payment.customer_id === customer.id && !payment.order_id
   );
+
+  // Calculate balances correctly
+  const currentOrdersBalance = customerOrders.reduce((sum, order) => sum + (order.total_amount - order.paid_amount), 0);
+  const totalOldBalancePayments = oldBalancePayments.reduce((sum, payment) => sum + payment.amount, 0);
+  const remainingOldBalance = Math.max(0, (customer.old_balance || 0) - totalOldBalancePayments);
+  const totalOutstandingBalance = currentOrdersBalance + remainingOldBalance;
 
   const generateCustomerPageQR = () => {
     const customerUrl = `${window.location.origin}/customer/${customer.qr_code}`;
@@ -41,194 +47,158 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
   };
 
-  const savePDFToStorage = async (htmlContent: string) => {
-    try {
-      const fileName = `customer-reports/${customer.qr_code}_report_${Date.now()}.html`;
-      
-      const { error } = await supabase.storage
-        .from('customer-reports')
-        .upload(fileName, new Blob([htmlContent], { type: 'text/html' }));
-
-      if (error) throw error;
-
-      toast({
-        title: "PDF Report Saved",
-        description: `Report saved securely to customer folder: ${customer.name}`,
-      });
-    } catch (error) {
-      console.error('Error saving PDF:', error);
-      toast({
-        variant: "destructive",
-        title: "Save Failed",
-        description: "Failed to save PDF report to customer folder",
-      });
+  const getOrderItemsHtml = (order: any) => {
+    if (!order.order_items || order.order_items.length === 0) {
+      return '<tr><td colspan="5" style="text-align: center; color: #666;">No items found</td></tr>';
     }
+    
+    return order.order_items.map((item: any) => {
+      const vegetable = vegetables.find(v => v.id === item.vegetable_id);
+      return `
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
+            ${vegetable?.photo_url ? 
+              `<img src="${vegetable.photo_url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" alt="${vegetable.name}" />` 
+              : '<div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; display: inline-block;"></div>'
+            }
+          </td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${vegetable?.name || 'Unknown Vegetable'}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.quantity} ${vegetable?.unit || 'units'}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">₹${item.unit_price.toFixed(2)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">₹${item.total_price.toFixed(2)}</td>
+        </tr>
+      `;
+    }).join('');
   };
 
-  const generatePDF = async () => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+  const getOldBalancePaymentsHtml = () => {
+    if (oldBalancePayments.length === 0) {
+      return '<div style="text-align: center; color: #666; padding: 20px;">No old balance payments recorded.</div>';
+    }
 
-    // Calculate balances
-    const totalCurrentBalance = customerOrders.reduce((sum, order) => sum + (order.total_amount - order.paid_amount), 0);
-    const totalOldBalancePayments = oldBalancePayments.reduce((sum, payment) => sum + payment.amount, 0);
-    const actualOldBalance = (customer.old_balance || 0) - totalOldBalancePayments;
-    const totalWithOldBalance = totalCurrentBalance + actualOldBalance;
-    
-    // Helper function to get order items HTML with images
-    const getOrderItemsHtml = (order: any) => {
-      if (!order.order_items || order.order_items.length === 0) {
-        return '<tr><td colspan="5" style="text-align: center; color: #666;">No items found</td></tr>';
-      }
-      
-      return order.order_items.map((item: any) => {
-        const vegetable = vegetables.find(v => v.id === item.vegetable_id);
-        return `
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
-              ${vegetable?.photo_url ? 
-                `<img src="${vegetable.photo_url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" alt="${vegetable.name}" />` 
-                : '<div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; display: inline-block;"></div>'
-              }
-            </td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${vegetable?.name || 'Unknown Vegetable'}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.quantity} ${vegetable?.unit || 'units'}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">₹${item.unit_price.toFixed(2)}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">₹${item.total_price.toFixed(2)}</td>
+    return `
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <thead>
+          <tr style="background: #f8f9fa;">
+            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Payment Date</th>
+            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Amount</th>
+            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Method</th>
+            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Notes</th>
           </tr>
-        `;
-      }).join('');
-    };
-
-    // Helper function to generate old balance payments HTML
-    const getOldBalancePaymentsHtml = () => {
-      if (oldBalancePayments.length === 0) {
-        return '<div style="text-align: center; color: #666; padding: 20px;">No old balance payments recorded.</div>';
-      }
-
-      return `
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <thead>
-            <tr style="background: #f8f9fa;">
-              <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Payment Date</th>
-              <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Amount</th>
-              <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Method</th>
-              <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Notes</th>
+        </thead>
+        <tbody>
+          ${oldBalancePayments.map(payment => `
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">${format(new Date(payment.payment_date), "dd/MM/yyyy")}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; color: #059669; font-weight: bold;">₹${payment.amount.toFixed(2)}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee; text-transform: uppercase;">${payment.payment_method}</td>
+              <td style="padding: 8px; border-bottom: 1px solid #eee;">${payment.notes || '-'}</td>
             </tr>
-          </thead>
-          <tbody>
-            ${oldBalancePayments.map(payment => `
-              <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${format(new Date(payment.payment_date), "dd/MM/yyyy")}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; color: #059669; font-weight: bold;">₹${payment.amount.toFixed(2)}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; text-transform: uppercase;">${payment.payment_method}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${payment.notes || '-'}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    };
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  };
 
-    // Helper function to generate order details HTML with proper pagination
-    const getOrdersHtml = () => {
-      if (customerOrders.length === 0) {
-        return '<div style="text-align: center; color: #666; padding: 20px;">No orders found for this customer.</div>';
-      }
+  const getOrdersHtml = () => {
+    if (customerOrders.length === 0) {
+      return '<div style="text-align: center; color: #666; padding: 20px;">No orders found for this customer.</div>';
+    }
 
-      let ordersHtml = '';
-      let currentPageHeight = 0;
-      const maxPageHeight = 900; // Approximate page height in pixels
+    let ordersHtml = '';
+    let currentPageHeight = 0;
+    const maxPageHeight = 900;
+    
+    customerOrders.forEach((order, index) => {
+      const orderHeight = 250 + (order.order_items?.length || 0) * 50;
       
-      customerOrders.forEach((order, index) => {
-        const orderHeight = 250 + (order.order_items?.length || 0) * 50; // Estimate height
-        
-        if (currentPageHeight + orderHeight > maxPageHeight && index > 0) {
-          ordersHtml += '<div class="page-break"></div>';
-          currentPageHeight = 0;
-        }
-        
-        ordersHtml += `
-          <div style="margin-bottom: 30px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; break-inside: avoid;">
-            <div style="background: #f9fafb; padding: 15px; border-bottom: 1px solid #e5e7eb;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <strong style="font-size: 16px;">Order #${order.id.substring(0, 8)}</strong>
-                  <div style="color: #666; margin-top: 5px;">Order Date: ${format(new Date(order.order_date), "dd/MM/yyyy")}</div>
-                </div>
-                <div style="text-align: right;">
-                  <div style="font-size: 18px; font-weight: bold; color: #22c55e;">₹${order.total_amount.toFixed(2)}</div>
-                  <div style="color: ${order.balance_amount > 0 ? '#dc2626' : order.balance_amount < 0 ? '#059669' : '#666'}; font-weight: bold;">
-                    ${order.balance_amount > 0 
-                      ? `₹${order.balance_amount.toFixed(2)} Due` 
-                      : order.balance_amount < 0 
-                        ? `₹${Math.abs(order.balance_amount).toFixed(2)} Advance` 
-                        : 'Fully Paid'
-                    }
-                  </div>
-                </div>
+      if (currentPageHeight + orderHeight > maxPageHeight && index > 0) {
+        ordersHtml += '<div class="page-break"></div>';
+        currentPageHeight = 0;
+      }
+      
+      ordersHtml += `
+        <div style="margin-bottom: 30px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; break-inside: avoid;">
+          <div style="background: #f9fafb; padding: 15px; border-bottom: 1px solid #e5e7eb;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="font-size: 16px;">Order #${order.id.substring(0, 8)}</strong>
+                <div style="color: #666; margin-top: 5px;">Order Date: ${format(new Date(order.order_date), "dd/MM/yyyy")}</div>
               </div>
-            </div>
-            
-            <div style="padding: 15px;">
-              <h4 style="margin: 0 0 10px 0; color: #333;">Order Items with Images</h4>
-              <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
-                <thead>
-                  <tr style="background: #f8f9fa;">
-                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Image</th>
-                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Vegetable</th>
-                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Quantity</th>
-                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Unit Price</th>
-                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Total Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${getOrderItemsHtml(order)}
-                </tbody>
-              </table>
-              
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f8f9fa; padding: 15px; border-radius: 5px;">
-                <div>
-                  <h5 style="margin: 0 0 10px 0; color: #333;">Order Summary</h5>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 14px;">
-                    <span>Total Amount:</span>
-                    <span style="font-weight: bold;">₹${order.total_amount.toFixed(2)}</span>
-                    <span>Paid Amount:</span>
-                    <span style="color: #059669;">₹${order.paid_amount.toFixed(2)}</span>
-                    <span>Balance:</span>
-                    <span style="color: ${order.balance_amount > 0 ? '#dc2626' : '#059669'}; font-weight: bold;">
-                      ₹${order.balance_amount.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-                
-                <div>
-                  <h5 style="margin: 0 0 10px 0; color: #333;">Payment Details</h5>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 14px;">
-                    <span>Payment Method:</span>
-                    <span style="text-transform: uppercase;">${order.payment_method || 'CASH'}</span>
-                    <span>Payment Status:</span>
-                    <span style="color: ${
-                      order.payment_status === 'paid' ? '#059669' : 
-                      order.payment_status === 'partial' ? '#d97706' : '#dc2626'
-                    }; font-weight: bold; text-transform: uppercase;">
-                      ${order.payment_status || 'PENDING'}
-                    </span>
-                    <span>Order Created:</span>
-                    <span>${order.created_at ? format(new Date(order.created_at), "dd/MM/yyyy 'at' HH:mm") : 'N/A'}</span>
-                  </div>
+              <div style="text-align: right;">
+                <div style="font-size: 18px; font-weight: bold; color: #22c55e;">₹${order.total_amount.toFixed(2)}</div>
+                <div style="color: ${order.balance_amount > 0 ? '#dc2626' : order.balance_amount < 0 ? '#059669' : '#666'}; font-weight: bold;">
+                  ${order.balance_amount > 0 
+                    ? `₹${order.balance_amount.toFixed(2)} Due` 
+                    : order.balance_amount < 0 
+                      ? `₹${Math.abs(order.balance_amount).toFixed(2)} Advance` 
+                      : 'Fully Paid'
+                  }
                 </div>
               </div>
             </div>
           </div>
-        `;
-        
-        currentPageHeight += orderHeight;
-      });
+          
+          <div style="padding: 15px;">
+            <h4 style="margin: 0 0 10px 0; color: #333;">Order Items with Images</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+              <thead>
+                <tr style="background: #f8f9fa;">
+                  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Image</th>
+                  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Vegetable</th>
+                  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Quantity</th>
+                  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Unit Price</th>
+                  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Total Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${getOrderItemsHtml(order)}
+              </tbody>
+            </table>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+              <div>
+                <h5 style="margin: 0 0 10px 0; color: #333;">Order Summary</h5>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 14px;">
+                  <span>Total Amount:</span>
+                  <span style="font-weight: bold;">₹${order.total_amount.toFixed(2)}</span>
+                  <span>Paid Amount:</span>
+                  <span style="color: #059669;">₹${order.paid_amount.toFixed(2)}</span>
+                  <span>Balance:</span>
+                  <span style="color: ${order.balance_amount > 0 ? '#dc2626' : '#059669'}; font-weight: bold;">
+                    ₹${order.balance_amount.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+              
+              <div>
+                <h5 style="margin: 0 0 10px 0; color: #333;">Payment Details</h5>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 14px;">
+                  <span>Payment Method:</span>
+                  <span style="text-transform: uppercase;">${order.payment_method || 'CASH'}</span>
+                  <span>Payment Status:</span>
+                  <span style="color: ${
+                    order.payment_status === 'paid' ? '#059669' : 
+                    order.payment_status === 'partial' ? '#d97706' : '#dc2626'
+                  }; font-weight: bold; text-transform: uppercase;">
+                    ${order.payment_status || 'PENDING'}
+                  </span>
+                  <span>Order Created:</span>
+                  <span>${order.created_at ? format(new Date(order.created_at), "dd/MM/yyyy 'at' HH:mm") : 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
       
-      return ordersHtml;
-    };
+      currentPageHeight += orderHeight;
+    });
     
+    return ordersHtml;
+  };
+
+  const generatePDF = async () => {
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -458,16 +428,16 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
                 <div style="font-size: 12px; color: #047857;">Old Balance Payments</div>
               </div>
               <div class="balance-item">
-                <div style="font-size: 18px; font-weight: bold; color: #dc2626;">₹${actualOldBalance.toFixed(2)}</div>
+                <div style="font-size: 18px; font-weight: bold; color: #dc2626;">₹${remainingOldBalance.toFixed(2)}</div>
                 <div style="font-size: 12px; color: #991b1b;">Remaining Old Balance</div>
               </div>
               <div class="balance-item">
-                <div style="font-size: 18px; font-weight: bold; color: #2563eb;">₹${totalCurrentBalance.toFixed(2)}</div>
+                <div style="font-size: 18px; font-weight: bold; color: #2563eb;">₹${currentOrdersBalance.toFixed(2)}</div>
                 <div style="font-size: 12px; color: #1d4ed8;">Current Orders Balance</div>
               </div>
               <div class="balance-item">
-                <div style="font-size: 20px; font-weight: bold; color: ${totalWithOldBalance > 0 ? '#dc2626' : totalWithOldBalance < 0 ? '#059669' : '#666'};">
-                  ₹${totalWithOldBalance.toFixed(2)}
+                <div style="font-size: 20px; font-weight: bold; color: ${totalOutstandingBalance > 0 ? '#dc2626' : totalOutstandingBalance < 0 ? '#059669' : '#666'};">
+                  ₹${totalOutstandingBalance.toFixed(2)}
                 </div>
                 <div style="font-size: 12px; color: #666;">Total Outstanding Balance</div>
               </div>
@@ -500,22 +470,22 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
             </div>
           </div>
           
-          <div class="balance-status ${totalWithOldBalance === 0 ? 'balance-zero' : totalWithOldBalance > 0 ? 'balance-positive' : 'balance-negative'}">
-            ${totalWithOldBalance === 0 
+          <div class="balance-status ${totalOutstandingBalance === 0 ? 'balance-zero' : totalOutstandingBalance > 0 ? 'balance-positive' : 'balance-negative'}">
+            ${totalOutstandingBalance === 0 
               ? '✅ No Outstanding Balance - All payments are up to date' 
-              : totalWithOldBalance > 0 
-                ? `⚠️ Outstanding Amount: ₹${totalWithOldBalance.toFixed(2)} - Payment pending` 
-                : `💰 Advance Amount: ₹${Math.abs(totalWithOldBalance).toFixed(2)} - Credit available`
+              : totalOutstandingBalance > 0 
+                ? `⚠️ Outstanding Amount: ₹${totalOutstandingBalance.toFixed(2)} - Payment pending` 
+                : `💰 Advance Amount: ₹${Math.abs(totalOutstandingBalance).toFixed(2)} - Credit available`
             }
           </div>
           
-          ${totalWithOldBalance > 0 ? `
+          ${totalOutstandingBalance > 0 ? `
             <div class="qr-grid">
               <div class="qr-item">
                 <h3>Pay Outstanding Balance</h3>
-                <img src="${generateUPIQRCode(totalWithOldBalance)}" alt="UPI Payment QR Code" style="width: 200px; height: 200px;">
+                <img src="${generateUPIQRCode(totalOutstandingBalance)}" alt="UPI Payment QR Code" style="width: 200px; height: 200px;">
                 <p><strong>SHREE GANESHA GREEN LEAFY VEGETABLES</strong></p>
-                <p><strong>Amount:</strong> ₹${totalWithOldBalance.toFixed(2)}</p>
+                <p><strong>Amount:</strong> ₹${totalOutstandingBalance.toFixed(2)}</p>
               </div>
               <div class="qr-item">
                 <h3>Access Your Orders</h3>
@@ -545,14 +515,46 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
         </body>
       </html>
     `;
-    
-    // Save to storage
-    await savePDFToStorage(htmlContent);
-    
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+
+    try {
+      // Save PDF to Supabase database and storage
+      await savePDFReport.mutateAsync({
+        customerId: customer.id,
+        customerQRCode: customer.qr_code || customer.id.substring(0, 8),
+        htmlContent,
+        reportType: 'customer_report'
+      });
+
+      toast({
+        title: "PDF Report Generated & Saved",
+        description: `Report saved to customer folder: ${customer.name}`,
+      });
+
+      // Open print dialog
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+      }
+    } catch (error) {
+      console.error('Error saving PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "PDF Save Failed",
+        description: "Failed to save PDF report, but you can still print it",
+      });
+
+      // Still allow printing even if save fails
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+      }
+    }
   };
 
   return (
@@ -566,7 +568,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
           <p>Generate a comprehensive business report for <strong>{customer.name}</strong> including:</p>
           <ul className="list-disc list-inside text-sm space-y-1">
             <li>Complete customer information with photos</li>
-            <li>Monthly and yearly business analytics</li>
+            <li>Fixed old balance and payment calculations</li>
             <li>Detailed old balance tracking and payment history</li>
             <li>Current orders balance vs old balance breakdown</li>
             <li>Detailed order history with product images</li>
@@ -575,7 +577,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
             <li>Outstanding balance with UPI payment QR</li>
             <li>Customer access QR code</li>
             <li>Professional pagination (no content breaking)</li>
-            <li>Secure storage in customer folder</li>
+            <li>Automatic save to Supabase database in customer folder</li>
           </ul>
           
           <div className="bg-blue-50 p-3 rounded-lg">
@@ -583,27 +585,30 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
               <strong>Orders Found:</strong> {customerOrders.length} orders
               <br />
               <strong>Old Balance Payments:</strong> {oldBalancePayments.length} payments
-            </p>
-            <p className="text-sm text-blue-600">
-              All order details with vegetable images, old balance information, proper page breaks, and company branding will be included.
+              <br />
+              <strong>Total Outstanding:</strong> ₹{totalOutstandingBalance.toFixed(2)}
             </p>
           </div>
           
           <div className="bg-green-50 p-3 rounded-lg">
             <p className="text-sm text-green-700">
-              <strong>Enhanced Balance Features:</strong>
+              <strong>Fixed Balance Calculations:</strong>
             </p>
             <ul className="text-xs text-green-600 list-disc ml-4">
-              <li>Original old balance tracking</li>
-              <li>Old balance payments with dates and methods</li>
-              <li>Remaining old balance calculation</li>
-              <li>Total balance including both current and old balances</li>
+              <li>Current orders balance: ₹{currentOrdersBalance.toFixed(2)}</li>
+              <li>Remaining old balance: ₹{remainingOldBalance.toFixed(2)}</li>
+              <li>Old balance payments applied: ₹{totalOldBalancePayments.toFixed(2)}</li>
+              <li>Total outstanding: ₹{totalOutstandingBalance.toFixed(2)}</li>
             </ul>
           </div>
           
           <div className="flex gap-2">
-            <Button onClick={generatePDF} className="flex-1">
-              Generate Enhanced PDF Report
+            <Button 
+              onClick={generatePDF} 
+              className="flex-1"
+              disabled={savePDFReport.isPending}
+            >
+              {savePDFReport.isPending ? 'Saving...' : 'Generate & Save PDF Report'}
             </Button>
             <Button variant="outline" onClick={onClose}>
               Cancel
