@@ -204,7 +204,7 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Customer Report - ${customer.name}</title>
+          <title>Customer Report - ${customer.name} | Shree Ganesha Green Leafy Vegetables</title>
           <style>
             body { 
               font-family: Arial, sans-serif; 

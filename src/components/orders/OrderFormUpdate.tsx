@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,70 +38,56 @@ const OrderFormUpdate: React.FC<OrderFormUpdateProps> = ({
   const [customerId, setCustomerId] = useState<string>(
     initialData?.customer_id || preSelectedCustomerId || ""
   );
-  const [items, setItems] = useState<OrderItem[]>(() => {
-    // Initialize items with all vegetables
-    return vegetables.map(veg => {
-      // Check if there's existing data for this vegetable
-      const existingItem = initialData?.order_items?.find(item => item.vegetable_id === veg.id);
-      if (existingItem) {
-        return {
-          vegetable_id: veg.id,
-          quantity: existingItem.quantity,
-          unit_price: existingItem.unit_price,
-          total_price: existingItem.total_price
-        };
-      }
-      return {
-        vegetable_id: veg.id,
-        quantity: 0,
-        unit_price: veg.price,
-        total_price: 0
-      };
-    });
-  });
+  const [items, setItems] = useState<OrderItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'mixed' | 'adjustment'>(
     initialData?.payment_method || 'cash'
   );
   const [paidAmount, setPaidAmount] = useState<number>(initialData?.paid_amount || 0);
   const [editingPrice, setEditingPrice] = useState<string | null>(null);
   const [tempPrice, setTempPrice] = useState<number>(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const { toast } = useToast();
 
-  // Update items when vegetables change
+  // Initialize items when vegetables are loaded
   useEffect(() => {
-    if (vegetables.length > 0) {
-      setItems(prevItems => {
-        const newItems = vegetables.map(veg => {
-          const existingItem = prevItems.find(item => item.vegetable_id === veg.id);
-          const initialItem = initialData?.order_items?.find(item => item.vegetable_id === veg.id);
-          
-          if (existingItem) {
-            return existingItem;
-          } else if (initialItem) {
-            return {
-              vegetable_id: veg.id,
-              quantity: initialItem.quantity,
-              unit_price: initialItem.unit_price,
-              total_price: initialItem.total_price
-            };
-          } else {
-            return {
-              vegetable_id: veg.id,
-              quantity: 0,
-              unit_price: veg.price,
-              total_price: 0
-            };
-          }
-        });
-        return newItems;
+    if (vegetables.length > 0 && !isInitialized) {
+      console.log('Initializing items with vegetables:', vegetables.length);
+      console.log('Initial data order items:', initialData?.order_items);
+      
+      const newItems = vegetables.map(veg => {
+        // Check if there's existing data for this vegetable
+        const existingItem = initialData?.order_items?.find(item => item.vegetable_id === veg.id);
+        console.log(`Vegetable ${veg.name}: existing item:`, existingItem);
+        
+        if (existingItem) {
+          return {
+            id: existingItem.id,
+            order_id: existingItem.order_id,
+            vegetable_id: veg.id,
+            quantity: existingItem.quantity,
+            unit_price: existingItem.unit_price,
+            total_price: existingItem.total_price
+          } as OrderItem;
+        }
+        return {
+          vegetable_id: veg.id,
+          quantity: 0,
+          unit_price: veg.price,
+          total_price: 0
+        } as OrderItem;
       });
+      
+      console.log('Setting items:', newItems);
+      setItems(newItems);
+      setIsInitialized(true);
     }
-  }, [vegetables, initialData]);
+  }, [vegetables, initialData, isInitialized]);
 
   // Set pre-selected customer when component mounts
   useEffect(() => {
     if (preSelectedCustomerId && !initialData) {
+      console.log('Setting pre-selected customer:', preSelectedCustomerId);
       setCustomerId(preSelectedCustomerId);
     }
   }, [preSelectedCustomerId, initialData]);
@@ -210,6 +196,7 @@ const OrderFormUpdate: React.FC<OrderFormUpdateProps> = ({
       customer_id: customerId,
       order_items: validItems,
       created_at: initialData?.created_at,
+      updated_at: initialData?.updated_at,
       total_amount: total,
       payment_method: paymentMethod,
       payment_status: calculatePaymentStatus(total, paidAmount),
@@ -224,10 +211,23 @@ const OrderFormUpdate: React.FC<OrderFormUpdateProps> = ({
   const selectedCustomer = customers.find(c => c.id === customerId);
   const total = calculateTotal();
 
+  // Show loading state if not initialized
+  if (!isInitialized) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-6">
+          <div className="text-center">Loading order form...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>{initialData ? "Edit Order" : "New Order"}</CardTitle>
+        <CardTitle>
+          {initialData ? "Edit Order - Shree Ganesha Green Leafy Vegetables" : "New Order - Shree Ganesha Green Leafy Vegetables"}
+        </CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
