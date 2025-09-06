@@ -33,32 +33,40 @@ const Dashboard = () => {
         <StatCard
           title="Total Customers"
           value={customers.length.toString()}
-          icon={Users}
+          icon={<Users className="h-4 w-4" />}
           description="Active customers"
         />
         <StatCard
           title="Total Orders"
           value={orders.length.toString()}
-          icon={ShoppingCart}
+          icon={<ShoppingCart className="h-4 w-4" />}
           description="All time orders"
         />
         <StatCard
           title="Vegetables"
           value={vegetables.length.toString()}
-          icon={Package}
+          icon={<Package className="h-4 w-4" />}
           description="Available items"
         />
         <StatCard
           title="Total Revenue"
           value={`₹${totalRevenue.toFixed(2)}`}
-          icon={TrendingUp}
+          icon={<TrendingUp className="h-4 w-4" />}
           description="All time revenue"
         />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <RecentOrdersList orders={recentOrders} />
-        <LowStockAlert vegetables={vegetables} />
+        <RecentOrdersList 
+          orders={recentOrders} 
+          customers={customers}
+          onViewOrder={(order) => {/* View order functionality can be added later */}}
+        />
+        <LowStockAlert 
+          orders={orders}
+          vegetables={vegetables} 
+          days={7}
+        />
       </div>
 
       {pendingPayments > 0 && (
