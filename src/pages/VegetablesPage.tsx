@@ -30,10 +30,11 @@ const VegetablesPage = () => {
         description: "Vegetable has been deleted successfully",
       });
     } catch (error) {
+      console.error('Error deleting vegetable:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete vegetable",
+        description: error instanceof Error ? error.message : "Failed to delete vegetable",
       });
     }
   };
@@ -56,10 +57,11 @@ const VegetablesPage = () => {
       setShowForm(false);
       setEditingVegetable(null);
     } catch (error) {
+      console.error('Error saving vegetable:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save vegetable",
+        description: error instanceof Error ? error.message : "Failed to save vegetable",
       });
     }
   };

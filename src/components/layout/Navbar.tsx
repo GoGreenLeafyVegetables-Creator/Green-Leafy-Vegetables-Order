@@ -20,13 +20,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('adminUser');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback to localStorage cleanup
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('adminUser');
+      navigate('/login');
+    }
   };
 
   const navItems = [

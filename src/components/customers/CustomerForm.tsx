@@ -58,11 +58,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSave, onCancel, initialDa
     }
     
     onSave(formData);
-    
-    toast({
-      title: initialData ? "Customer Updated" : "Customer Added",
-      description: `${formData.name} has been ${initialData ? "updated" : "added"} successfully`,
-    });
   };
 
   return (

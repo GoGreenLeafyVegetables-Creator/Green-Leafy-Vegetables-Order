@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,11 +63,6 @@ const VegetableForm: React.FC<VegetableFormProps> = ({ onSave, onCancel, initial
     }
     
     onSave(formData);
-    
-    toast({
-      title: initialData ? "Vegetable Updated" : "Vegetable Added",
-      description: `${formData.name} has been ${initialData ? "updated" : "added"} successfully`,
-    });
   };
 
   return (

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LoginCredentials {
   email: string;
@@ -28,22 +29,55 @@ const LoginForm = () => {
     setCredentials((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
       if (
         credentials.email === ADMIN_CREDENTIALS.email && 
         credentials.password === ADMIN_CREDENTIALS.password
       ) {
-        // Store auth state
+        // Sign in with Supabase using the admin credentials
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password
+        });
+
+        if (error) {
+          // If user doesn't exist, create them first
+          if (error.message.includes('Invalid login credentials')) {
+            const { error: signUpError } = await supabase.auth.signUp({
+              email: credentials.email,
+              password: credentials.password,
+              options: {
+                data: {
+                  name: "Shree Ganesha Green Leafy Vegetables Admin"
+                }
+              }
+            });
+            
+            if (signUpError) throw signUpError;
+            
+            // Now try to sign in again
+            const { error: retryError } = await supabase.auth.signInWithPassword({
+              email: credentials.email,
+              password: credentials.password
+            });
+            
+            if (retryError) throw retryError;
+          } else {
+            throw error;
+          }
+        }
+
+        // Store auth state for backwards compatibility
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("adminUser", JSON.stringify({
           email: credentials.email,
           name: "Shree Ganesha Green Leafy Vegetables Admin"
         }));
+        
         toast({
           title: "Login successful",
           description: "Welcome to Shree Ganesha Green Leafy Vegetables Management System",
@@ -56,8 +90,16 @@ const LoginForm = () => {
           description: "Invalid email or password",
         });
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Authentication failed",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

@@ -35,10 +35,11 @@ const CustomersPage = () => {
         description: "Customer has been deleted successfully",
       });
     } catch (error) {
+      console.error('Error deleting customer:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete customer",
+        description: error instanceof Error ? error.message : "Failed to delete customer",
       });
     }
   };
@@ -71,10 +72,11 @@ const CustomersPage = () => {
       setShowForm(false);
       setEditingCustomer(null);
     } catch (error) {
+      console.error('Error saving customer:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save customer",
+        description: error instanceof Error ? error.message : "Failed to save customer",
       });
     }
   };
