@@ -6,6 +6,7 @@ import { useOrders, useVegetables, usePayments } from "@/hooks/use-supabase-data
 import { useSavePDFReport } from "@/hooks/use-pdf-reports";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import ganeshaLogo from "@/assets/ganesha-logo.png";
 
 interface CustomerPDFReportProps {
   customer: Customer;
@@ -122,7 +123,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
           <div style="background: #f9fafb; padding: 15px; border-bottom: 1px solid #e5e7eb;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <strong style="font-size: 16px;">Order #${order.id.substring(0, 8)}</strong>
+                <strong style="font-size: 16px;">Order #SGLV-${order.id.slice(-4)}</strong>
                 <div style="color: #666; margin-top: 5px;">Order Date: ${format(new Date(order.order_date), "dd/MM/yyyy")}</div>
               </div>
               <div style="text-align: right;">
@@ -376,7 +377,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
         </head>
         <body>
           <div class="header">
-            <img src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" alt="Lord Ganesha Logo" class="logo" />
+            <img src={ganeshaLogo} alt="Lord Ganesha Logo" class="logo" />
             <div class="company-name">SHREE GANESHA GREEN LEAFY VEGETABLES</div>
             <div class="report-title">Detailed Customer Business Report</div>
             <div style="font-size: 14px; color: #666;">Generated on ${new Date().toLocaleString()}</div>

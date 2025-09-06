@@ -111,7 +111,7 @@ const CustomerBill: React.FC<CustomerBillProps> = ({
             <h3>Bill Information</h3>
             <div class="customer-info">
               <div>
-                <p><strong>Bill No:</strong> ${order.id.substring(0, 8)}</p>
+                <p><strong>Bill No:</strong> SGLV-${order.id.slice(-4)}</p>
                 <p><strong>Date:</strong> ${new Date(order.order_date).toLocaleDateString()}</p>
                 <p><strong>Customer:</strong> ${customer.name}</p>
                 <p><strong>Mobile:</strong> ${customer.mobile}</p>
@@ -219,7 +219,7 @@ const CustomerBill: React.FC<CustomerBillProps> = ({
             <CardContent className="p-4">
               <h3 className="font-semibold mb-2">Order Summary</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>Order ID: {order.id.substring(0, 8)}</div>
+                <div>Order ID: SGLV-{order.id.slice(-4)}</div>
                 <div>Date: {new Date(order.order_date).toLocaleDateString()}</div>
                 <div>Total Amount: ₹{order.total_amount.toFixed(2)}</div>
                 <div>Paid Amount: ₹{order.paid_amount.toFixed(2)}</div>

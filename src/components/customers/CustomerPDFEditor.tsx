@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { Save, Download, Edit, Move, Type, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import ganeshaLogo from "@/assets/ganesha-logo.png";
 
 interface CustomerPDFEditorProps {
   customer: Customer;
@@ -156,7 +157,7 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
     const newElement: EditableElement = {
       id: `image-${Date.now()}`,
       type: 'image',
-      content: '/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png',
+      content: ganeshaLogo,
       x: 100,
       y: 300,
       width: 100,
@@ -264,7 +265,7 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
             ${customerOrders.map(order => `
               <div style="border: 1px solid #e5e7eb; margin-bottom: 20px; border-radius: 8px;">
                 <div style="background: #f9fafb; padding: 15px; border-bottom: 1px solid #e5e7eb;">
-                  <strong>Order #${order.id.substring(0, 8)} - ${format(new Date(order.order_date), "dd/MM/yyyy")}</strong>
+                  <strong>Order #SGLV-${order.id.slice(-4)} - ${format(new Date(order.order_date), "dd/MM/yyyy")}</strong>
                   <div style="float: right;">₹${order.total_amount.toFixed(2)}</div>
                 </div>
                 <div style="padding: 15px;">

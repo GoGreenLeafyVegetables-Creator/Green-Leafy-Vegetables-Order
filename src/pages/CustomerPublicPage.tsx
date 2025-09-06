@@ -230,7 +230,7 @@ const CustomerPublicPage = () => {
                             {new Date(order.order_date).toLocaleDateString()}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Order #{order.id.substring(0, 8)}
+                            Order #SGLV-{order.id.slice(-4)}
                           </div>
                         </div>
                         <div className="text-right">

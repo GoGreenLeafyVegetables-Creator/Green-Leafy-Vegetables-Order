@@ -62,7 +62,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
               <div className="space-y-1 text-sm">
                 <div className="grid grid-cols-2">
                   <span className="text-muted-foreground">Order ID:</span>
-                  <span>{order.id}</span>
+                  <span>SGLV-{order.id.slice(-4)}</span>
                 </div>
                 <div className="grid grid-cols-2">
                   <span className="text-muted-foreground">Date:</span>

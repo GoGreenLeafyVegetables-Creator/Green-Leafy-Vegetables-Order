@@ -277,7 +277,7 @@ const CustomerBalanceManagementDialog: React.FC<CustomerBalanceManagementDialogP
                       <TableRow key={order.id}>
                         <TableCell>{format(new Date(order.order_date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="font-mono text-xs">
-                          {order.id.substring(0, 8)}...
+                          SGLV-{order.id.slice(-4)}
                         </TableCell>
                         <TableCell>₹{order.total_amount.toFixed(2)}</TableCell>
                         <TableCell>

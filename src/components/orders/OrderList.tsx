@@ -38,7 +38,7 @@ const OrderList: React.FC<OrderListProps> = ({
     const customer = customers.find(c => c.id === order.customer_id);
     const customerName = customer?.name || "";
     const date = format(new Date(order.order_date), "PPP");
-    const orderNumber = order.id.slice(-8).toUpperCase(); // Last 8 characters as order number
+    const orderNumber = `SGLV-${order.id.slice(-4)}`; // Format as SGLV-0000
     
     const matchesSearch = 
       customerName.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -103,12 +103,12 @@ const OrderList: React.FC<OrderListProps> = ({
               <TableBody>
                 {filteredOrders.map((order) => {
                   const customer = customers.find(c => c.id === order.customer_id);
-                  const orderNumber = order.id.slice(-8).toUpperCase();
+                  const orderNumber = `SGLV-${order.id.slice(-4)}`;
                   
                   return (
                     <TableRow key={order.id}>
                       <TableCell className="font-mono text-sm">
-                        #{orderNumber}
+                        {orderNumber}
                       </TableCell>
                       <TableCell>
                         {format(new Date(order.order_date), "dd/MM/yyyy")}

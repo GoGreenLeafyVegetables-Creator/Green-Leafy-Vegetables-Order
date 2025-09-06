@@ -215,7 +215,7 @@ const CustomerDetailsPage = () => {
                 <div key={order.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h4 className="font-semibold">Order #{order.id.slice(0, 8)}</h4>
+                      <h4 className="font-semibold">Order #SGLV-{order.id.slice(-4)}</h4>
                       <p className="text-sm text-muted-foreground">
                         {format(new Date(order.order_date), 'PPP')}
                       </p>
