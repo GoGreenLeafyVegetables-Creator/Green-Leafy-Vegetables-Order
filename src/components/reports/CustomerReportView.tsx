@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Calendar, User, FileText } from "lucide-react";
+import { Download, Calendar, User, FileText, Eye, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { Order } from "@/types/order";
 import { Customer } from "@/types/customer";
 import { Vegetable } from "@/types/vegetable";
 import ganeshaLogo from "@/assets/ganesha-logo.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface CustomerReportViewProps {
   orders: Order[];
@@ -19,20 +21,58 @@ interface CustomerReportViewProps {
 
 const CustomerReportView: React.FC<CustomerReportViewProps> = ({ orders, customers, vegetables }) => {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("all");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [storedReports, setStoredReports] = useState<any[]>([]);
+  const { toast } = useToast();
+
+  // Load stored reports on component mount
+  React.useEffect(() => {
+    loadStoredReports();
+  }, []);
+
+  const loadStoredReports = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('customer_pdf_reports')
+        .select(`
+          *,
+          customers(name, customer_code)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setStoredReports(data || []);
+    } catch (error) {
+      console.error('Error loading stored reports:', error);
+    }
+  };
 
   // Filter orders by selected customer
   const customerOrders = orders.filter((order) => 
     selectedCustomerId === "all" || order.customer_id === selectedCustomerId
   ).sort((a, b) => new Date(b.order_date).getTime() - new Date(a.order_date).getTime());
 
-  const generatePDFReport = () => {
-    const customer = customers.find(c => c.id === selectedCustomerId);
-    const totalBusiness = customerOrders.reduce((sum, order) => sum + order.total_amount, 0);
-    const totalPaid = customerOrders.reduce((sum, order) => sum + order.paid_amount, 0);
-    const totalBalance = customerOrders.reduce((sum, order) => sum + order.balance_amount, 0);
+  const generatePDFReport = async () => {
+    if (isGenerating) return;
     
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    setIsGenerating(true);
+    try {
+      const customer = customers.find(c => c.id === selectedCustomerId);
+      const totalBusiness = customerOrders.reduce((sum, order) => sum + order.total_amount, 0);
+      const totalPaid = customerOrders.reduce((sum, order) => sum + order.paid_amount, 0);
+      const totalBalance = customerOrders.reduce((sum, order) => sum + order.balance_amount, 0);
+      
+      // Create filename and storage path
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const customerName = customer ? customer.name.replace(/[^a-zA-Z0-9]/g, '_') : 'All_Customers';
+      const fileName = `${customerName}_Report_${timestamp}.pdf`;
+      const storagePath = `${customerName}/${fileName}`;
+      
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        setIsGenerating(false);
+        return;
+      }
     
     // Get order items details for each order
     const getOrderItemsHtml = (order: Order) => {
@@ -179,70 +219,210 @@ const CustomerReportView: React.FC<CustomerReportViewProps> = ({ orders, custome
       </html>
     `;
     
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      
+      // Wait a bit before printing to ensure content is loaded
+      setTimeout(async () => {
+        printWindow.print();
+        
+        // Save report metadata to database
+        try {
+          const { error } = await supabase
+            .from('customer_pdf_reports')
+            .insert({
+              customer_id: selectedCustomerId === "all" ? null : selectedCustomerId,
+              file_name: fileName,
+              file_path: storagePath,
+              storage_path: storagePath,
+              report_type: 'customer_business_report',
+              file_size: new Blob([htmlContent]).size
+            });
+          
+          if (error) throw error;
+          
+          toast({
+            title: "Report Generated",
+            description: "PDF report has been generated and saved successfully."
+          });
+          
+          // Reload stored reports
+          loadStoredReports();
+        } catch (error) {
+          console.error('Error saving report metadata:', error);
+          toast({
+            title: "Report Generated",
+            description: "PDF generated but failed to save metadata to database.",
+            variant: "destructive"
+          });
+        }
+        
+        setIsGenerating(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF report.",
+        variant: "destructive"
+      });
+      setIsGenerating(false);
+    }
+  };
+
+  const deleteStoredReport = async (reportId: string) => {
+    try {
+      const { error } = await supabase
+        .from('customer_pdf_reports')
+        .delete()
+        .eq('id', reportId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Report Deleted",
+        description: "Report has been deleted successfully."
+      });
+      
+      loadStoredReports();
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete report.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-col md:flex-row md:items-center gap-4 md:justify-between">
-        <CardTitle>Customer Reports (PDF Only)</CardTitle>
-        <div className="flex flex-col md:flex-row items-center gap-2">
-          <div className="w-full md:w-64">
-            <Select
-              value={selectedCustomerId}
-              onValueChange={setSelectedCustomerId}
+    <div className="space-y-6">
+      {/* Generate New Report Section */}
+      <Card className="w-full">
+        <CardHeader className="flex flex-col md:flex-row md:items-center gap-4 md:justify-between">
+          <CardTitle>Generate Customer Report</CardTitle>
+          <div className="flex flex-col md:flex-row items-center gap-2">
+            <div className="w-full md:w-64">
+              <Select
+                value={selectedCustomerId}
+                onValueChange={setSelectedCustomerId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select customer" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Customers</SelectItem>
+                  {customers.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <Button 
+              onClick={generatePDFReport} 
+              disabled={customerOrders.length === 0 || isGenerating}
+              className="w-full md:w-auto"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select customer" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Customers</SelectItem>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <FileText className="mr-2 h-4 w-4" />
+              {isGenerating ? "Generating..." : "Generate PDF Report"}
+            </Button>
           </div>
-          
-          <Button 
-            onClick={generatePDFReport} 
-            disabled={customerOrders.length === 0}
-            className="w-full md:w-auto"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Generate PDF Report
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {customerOrders.length > 0 ? (
-          <div className="text-center py-8">
-            <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">PDF Reports Only</h3>
-            <p className="text-muted-foreground mb-4">
-              All customer reports are generated as PDF documents for better printing and sharing.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Orders found: {customerOrders.length} | 
-              Selected: {selectedCustomerId === "all" ? "All Customers" : customers.find(c => c.id === selectedCustomerId)?.name}
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <p className="text-muted-foreground mb-4">
-              {selectedCustomerId !== "all"
-                ? "No orders found for the selected customer"
-                : "No orders found. Create your first order!"}
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {customerOrders.length > 0 ? (
+            <div className="text-center py-8">
+              <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">Generate & Save Reports</h3>
+              <p className="text-muted-foreground mb-4">
+                Generate PDF reports for customers and save them to database for future reference.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Orders found: {customerOrders.length} | 
+                Selected: {selectedCustomerId === "all" ? "All Customers" : customers.find(c => c.id === selectedCustomerId)?.name}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <p className="text-muted-foreground mb-4">
+                {selectedCustomerId !== "all"
+                  ? "No orders found for the selected customer"
+                  : "No orders found. Create your first order!"}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Stored Reports Section */}
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Stored Customer Reports</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Previously generated customer reports stored in database
+          </p>
+        </CardHeader>
+        <CardContent>
+          {storedReports.length > 0 ? (
+            <div className="space-y-4">
+              {storedReports.map((report) => (
+                <div key={report.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium">
+                      {report.customers?.name || 'All Customers'} Report
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Generated on {format(new Date(report.created_at), "PPP 'at' pp")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      File: {report.file_name} • Size: {(report.file_size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Re-generate and view the report
+                        if (report.customer_id) {
+                          setSelectedCustomerId(report.customer_id);
+                          generatePDFReport();
+                        } else {
+                          setSelectedCustomerId("all");
+                          generatePDFReport();
+                        }
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => deleteStoredReport(report.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">No Stored Reports</h3>
+              <p className="text-muted-foreground">
+                Generate your first customer report to see it here.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
