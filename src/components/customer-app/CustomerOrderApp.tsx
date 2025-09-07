@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import CustomerOrderForm from "./CustomerOrderForm";
 import { Store, Phone, MapPin } from "lucide-react";
 import { Order } from "@/types/order";
+import ganeshaLogo from "@/assets/ganesha-logo.png";
 
 const CustomerOrderApp = () => {
   const { qrCode } = useParams<{ qrCode: string }>();
@@ -36,7 +37,7 @@ const CustomerOrderApp = () => {
           </CardHeader>
           <CardContent>
             <p className="text-center text-gray-600">
-              Sorry, we couldn't find a customer with this QR code. Please contact Go Green Leafy Vegetables for assistance.
+              Sorry, we couldn't find a customer with this QR code. Please contact Shree Ganesha Green Leafy Vegetables for assistance.
             </p>
           </CardContent>
         </Card>
@@ -69,11 +70,11 @@ const CustomerOrderApp = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center mb-2">
             <img 
-              src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" 
-              alt="Lord Ganesha - Go Green Leafy Vegetables Logo" 
-              className="h-8 w-8 mr-3"
+              src={ganeshaLogo} 
+              alt="Lord Ganesha - Shree Ganesha Green Leafy Vegetables Logo" 
+              className="h-12 w-12 mr-3"
             />
-            <h1 className="text-2xl font-bold">Go Green Leafy Vegetables</h1>
+            <h1 className="text-2xl font-bold">Shree Ganesha Green Leafy Vegetables</h1>
           </div>
           <div className="bg-green-700 rounded-lg p-3">
             <div className="flex items-center gap-2 mb-1">

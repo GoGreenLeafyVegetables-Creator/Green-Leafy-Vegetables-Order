@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCustomers, useVegetables } from "@/hooks/use-supabase-data";
 import CustomerSimpleOrderForm from "@/components/customer-app/CustomerSimpleOrderForm";
 import { Store, Phone, MapPin } from "lucide-react";
+import ganeshaLogo from "@/assets/ganesha-logo.png";
 
 const CustomerOrderPageSimple = () => {
   const { qrCode } = useParams<{ qrCode: string }>();
@@ -33,7 +34,7 @@ const CustomerOrderPageSimple = () => {
           </CardHeader>
           <CardContent>
             <p className="text-center text-gray-600">
-              Sorry, we couldn't find a customer with this QR code. Please contact Go Green Leafy Vegetables for assistance.
+              Sorry, we couldn't find a customer with this QR code. Please contact Shree Ganesha Green Leafy Vegetables for assistance.
             </p>
           </CardContent>
         </Card>
@@ -48,11 +49,11 @@ const CustomerOrderPageSimple = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center mb-2">
             <img 
-              src="/lovable-uploads/6b34b46f-d989-4539-ae7d-13e70d1fd5df.png" 
-              alt="Go Green Leafy Vegetables Logo" 
-              className="h-8 w-8 mr-3"
+              src={ganeshaLogo} 
+              alt="Lord Ganesha - Shree Ganesha Green Leafy Vegetables Logo" 
+              className="h-12 w-12 mr-3"
             />
-            <h1 className="text-2xl font-bold">Go Green Leafy Vegetables</h1>
+            <h1 className="text-2xl font-bold">Shree Ganesha Green Leafy Vegetables</h1>
           </div>
           <div className="bg-green-700 rounded-lg p-3">
             <div className="flex items-center gap-2 mb-1">

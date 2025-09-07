@@ -11,6 +11,7 @@ import { Customer } from "@/types/customer";
 import { Vegetable } from "@/types/vegetable";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import ganeshaLogo from "@/assets/ganesha-logo.png";
 
 interface CustomerBillProps {
   order: Order;
@@ -84,7 +85,7 @@ const CustomerBill: React.FC<CustomerBillProps> = ({
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { text-align: center; border-bottom: 2px solid #22c55e; padding-bottom: 20px; margin-bottom: 30px; }
-            .logo { width: 50px; height: 50px; margin: 0 auto 10px auto; display: block; }
+            .logo { width: 200px; height: 200px; margin: 0 auto 10px auto; display: block; }
             .company-name { color: #22c55e; font-size: 24px; font-weight: bold; }
             .bill-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
             .customer-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
@@ -102,7 +103,7 @@ const CustomerBill: React.FC<CustomerBillProps> = ({
         </head>
         <body>
           <div class="header">
-            <img src="/lovable-uploads/8fa965fb-6405-4e65-ba32-8efd8d8ef4ed.png" alt="Lord Ganesha Logo" class="logo" />
+            <img src="${ganeshaLogo}" alt="Lord Ganesha Logo" class="logo" />
             <div class="company-name">SHREE GANESHA GREEN LEAFY VEGETABLES</div>
             <div>Customer Bill</div>
           </div>

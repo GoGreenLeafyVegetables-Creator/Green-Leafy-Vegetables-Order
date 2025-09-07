@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Package, IndianRupee, Phone, MapPin, Store, ShoppingCart } from "lucide-react";
+import ganeshaLogo from "@/assets/ganesha-logo.png";
 
 const CustomerPublicPage = () => {
   const { qrCode } = useParams<{ qrCode: string }>();
@@ -104,11 +105,11 @@ const CustomerPublicPage = () => {
           <CardHeader className="text-center">
             <div className="flex items-center justify-center mb-2">
               <img 
-                src="/lovable-uploads/7d90b24c-ea23-4583-821b-cd6b4aa466f9.png" 
-                alt="Lord Ganesha - Go Green Leafy Vegetables Logo" 
+                src={ganeshaLogo} 
+                alt="Lord Ganesha - Shree Ganesha Green Leafy Vegetables Logo" 
                 className="h-12 w-12 mr-3"
               />
-              <CardTitle className="text-2xl">GO GREEN LEAFY VEGETABLES</CardTitle>
+              <CardTitle className="text-2xl">SHREE GANESHA GREEN LEAFY VEGETABLES</CardTitle>
             </div>
             <p className="text-green-100">Customer Dashboard</p>
           </CardHeader>

@@ -101,7 +101,7 @@ const CustomerReportView: React.FC<CustomerReportViewProps> = ({ orders, custome
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { text-align: center; border-bottom: 2px solid #22c55e; padding-bottom: 20px; margin-bottom: 30px; }
-            .logo { width: 80px; height: 80px; margin: 0 auto 10px auto; display: block; border-radius: 8px; }
+            .logo { width: 200px; height: 200px; margin: 0 auto 10px auto; display: block; border-radius: 8px; }
             .company-name { color: #22c55e; font-size: 24px; font-weight: bold; margin-bottom: 5px; }
             .customer-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
             .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }

@@ -57,7 +57,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
             <Link to="/" className="flex items-center space-x-2">
-              <img src={ganeshaLogo} alt="Ganesha Logo" className="h-8 w-8" />
+              <img src={ganeshaLogo} alt="Ganesha Logo" className="h-12 w-12" />
               <span className="font-bold text-lg text-gray-900">
                 Shree Ganesha Green Leafy Vegetables
               </span>
@@ -93,7 +93,7 @@ const Navbar = () => {
               <SheetContent side="right" className="w-64">
                 <div className="flex flex-col space-y-4 mt-8">
                   <div className="text-sm font-medium text-green-600 border-b pb-2 flex items-center space-x-2">
-                    <img src={ganeshaLogo} alt="Ganesha Logo" className="h-6 w-6" />
+                    <img src={ganeshaLogo} alt="Ganesha Logo" className="h-8 w-8" />
                     <span>Shree Ganesha Green Leafy Vegetables</span>
                   </div>
                   {navItems.map((item) => (

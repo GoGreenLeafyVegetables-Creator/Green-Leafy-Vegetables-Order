@@ -219,8 +219,8 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
               margin-bottom: 30px; 
             }
             .logo { 
-              width: 80px; 
-              height: 80px; 
+              width: 200px; 
+              height: 200px; 
               margin: 0 auto 15px auto; 
               display: block; 
               border-radius: 8px;
