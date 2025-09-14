@@ -241,7 +241,7 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
             if (el.type === 'text') {
               return `<div style="${style}">${el.content}</div>`;
             } else if (el.type === 'image') {
-              return `<img src="${el.content}" style="${style}" alt="Image" />`;
+              return `<img src="${ganeshaLogo}" style="${style}" alt="Image" />`;
             } else if (el.type === 'qr') {
               return `<img src="${el.content}" style="${style}" alt="QR Code" />`;
             }

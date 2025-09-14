@@ -377,7 +377,7 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
         </head>
         <body>
           <div class="header">
-            <img src={ganeshaLogo} alt="Lord Ganesha Logo" class="logo" />
+            <img src="${ganeshaLogo}" alt="Lord Ganesha Logo" class="logo" />
             <div class="company-name">SHREE GANESHA GREEN LEAFY VEGETABLES</div>
             <div class="report-title">Detailed Customer Business Report</div>
             <div style="font-size: 14px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
