@@ -160,8 +160,8 @@ const CustomerPDFEditor: React.FC<CustomerPDFEditorProps> = ({
       content: ganeshaLogo,
       x: 100,
       y: 300,
-      width: 200,
-      height: 200
+      width: 150,
+      height: 150
     };
     setElements(prev => [...prev, newElement]);
   };

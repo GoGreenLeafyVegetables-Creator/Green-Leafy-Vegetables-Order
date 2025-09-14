@@ -219,11 +219,12 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
               margin-bottom: 30px; 
             }
             .logo { 
-              width: 200px; 
-              height: 200px; 
+              width: 150px; 
+              height: 150px; 
               margin: 0 auto 15px auto; 
               display: block; 
               border-radius: 8px;
+              object-fit: contain;
             }
             .company-name { 
               color: #22c55e; 

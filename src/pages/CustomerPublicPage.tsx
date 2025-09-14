@@ -107,7 +107,7 @@ const CustomerPublicPage = () => {
               <img 
                 src={ganeshaLogo} 
                 alt="Lord Ganesha - Shree Ganesha Green Leafy Vegetables Logo" 
-                className="h-12 w-12 mr-3"
+                className="h-[150px] w-[150px] object-contain mr-3"
               />
               <CardTitle className="text-2xl">SHREE GANESHA GREEN LEAFY VEGETABLES</CardTitle>
             </div>

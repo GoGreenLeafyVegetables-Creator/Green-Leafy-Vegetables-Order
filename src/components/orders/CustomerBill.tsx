@@ -85,7 +85,7 @@ const CustomerBill: React.FC<CustomerBillProps> = ({
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { text-align: center; border-bottom: 2px solid #22c55e; padding-bottom: 20px; margin-bottom: 30px; }
-            .logo { width: 200px; height: 200px; margin: 0 auto 10px auto; display: block; }
+            .logo { width: 150px; height: 150px; margin: 0 auto 10px auto; display: block; object-fit: contain; }
             .company-name { color: #22c55e; font-size: 24px; font-weight: bold; }
             .bill-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
             .customer-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }

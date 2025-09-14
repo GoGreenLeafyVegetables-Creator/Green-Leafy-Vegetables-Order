@@ -51,7 +51,7 @@ const CustomerOrderPageSimple = () => {
             <img 
               src={ganeshaLogo} 
               alt="Lord Ganesha - Shree Ganesha Green Leafy Vegetables Logo" 
-              className="h-12 w-12 mr-3"
+              className="h-[150px] w-[150px] object-contain mr-3"
             />
             <h1 className="text-2xl font-bold">Shree Ganesha Green Leafy Vegetables</h1>
           </div>
