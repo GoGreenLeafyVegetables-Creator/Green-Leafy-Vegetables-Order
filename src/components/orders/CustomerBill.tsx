@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { Vegetable } from "@/types/vegetable";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import ganeshaLogo from "@/assets/ganesha-logo.png";
+import leafyBackground from "@/assets/leafy-background.png";
 
 interface CustomerBillProps {
   order: Order;
@@ -83,10 +83,80 @@ const CustomerBill: React.FC<CustomerBillProps> = ({
         <head>
           <title>Customer Bill - ${customer.name}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { text-align: center; border-bottom: 2px solid #22c55e; padding-bottom: 20px; margin-bottom: 30px; }
-            .logo { width: 150px; height: 150px; margin: 0 auto 10px auto; display: block; object-fit: contain; }
-            .company-name { color: #22c55e; font-size: 24px; font-weight: bold; }
+            body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+            .header { 
+              background: url('${leafyBackground}') center/cover; 
+              text-align: center; 
+              padding: 20px; 
+              margin-bottom: 30px; 
+              position: relative;
+              min-height: 120px;
+            }
+            .header::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(0,0,0,0.3);
+              z-index: 1;
+            }
+            .header-content {
+              position: relative;
+              z-index: 2;
+            }
+            .logo { 
+              width: 150px; 
+              height: 150px; 
+              margin: 0 auto 10px auto; 
+              display: block; 
+              object-fit: contain; 
+              border: 3px solid white;
+              border-radius: 10px;
+              background: rgba(255,255,255,0.9);
+              padding: 5px;
+            }
+            .company-name { 
+              color: white; 
+              font-size: 24px; 
+              font-weight: bold; 
+              text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+              border: 2px solid white;
+              background: rgba(0,0,0,0.7);
+              padding: 10px;
+              border-radius: 8px;
+              display: inline-block;
+            }
+            .footer {
+              background: url('${leafyBackground}') center/cover;
+              text-align: center;
+              padding: 15px;
+              margin-top: 30px;
+              position: relative;
+              min-height: 60px;
+            }
+            .footer::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(0,0,0,0.4);
+              z-index: 1;
+            }
+            .footer-content {
+              position: relative;
+              z-index: 2;
+              color: white;
+              text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+              background: rgba(0,0,0,0.6);
+              padding: 10px;
+              border-radius: 8px;
+              border: 2px solid white;
+              display: inline-block;
+            }
             .bill-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
             .customer-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
             .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
@@ -103,99 +173,105 @@ const CustomerBill: React.FC<CustomerBillProps> = ({
         </head>
         <body>
           <div class="header">
-            <img src="${ganeshaLogo}" alt="Lord Ganesha Logo" class="logo" />
-            <div class="company-name">SHREE GANESHA GREEN LEAFY VEGETABLES</div>
-            <div>Customer Bill</div>
-          </div>
-          
-          <div class="bill-info">
-            <h3>Bill Information</h3>
-            <div class="customer-info">
-              <div>
-                <p><strong>Bill No:</strong> SGLV-${order.id.slice(-4)}</p>
-                <p><strong>Date:</strong> ${new Date(order.order_date).toLocaleDateString()}</p>
-                <p><strong>Customer:</strong> ${customer.name}</p>
-                <p><strong>Mobile:</strong> ${customer.mobile}</p>
-              </div>
-              <div>
-                ${customer.shop_name ? `<p><strong>Shop:</strong> ${customer.shop_name}</p>` : ''}
-                ${customer.location ? `<p><strong>Location:</strong> ${customer.location}</p>` : ''}
-                <p><strong>Customer Code:</strong> ${customer.qr_code}</p>
-              </div>
+            <div class="header-content">
+              <img src="${ganeshaLogo}" alt="Lord Ganesha Logo" class="logo" />
+              <div class="company-name">SHREE GANESHA GREEN LEAFY VEGETABLES</div>
+              <div style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-top: 10px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 5px; border: 1px solid white; display: inline-block;">Customer Bill</div>
             </div>
           </div>
           
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Quantity</th>
-                <th>Unit</th>
-                <th>Price</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${order.order_items?.map(item => {
-                const vegetable = vegetables.find(v => v.id === item.vegetable_id);
-                return vegetable ? `
-                  <tr>
-                    <td>${vegetable.name}</td>
-                    <td>${item.quantity}</td>
-                    <td>${vegetable.unit}</td>
-                    <td>₹${item.unit_price.toFixed(2)}</td>
-                    <td>₹${item.total_price.toFixed(2)}</td>
-                  </tr>
-                ` : '';
-              }).join('')}
-            </tbody>
-          </table>
-          
-          <div class="total-section">
-            <h3>Payment Summary</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-              <div><strong>Total Amount:</strong></div>
-              <div>₹${order.total_amount.toFixed(2)}</div>
-              <div><strong>Previous Paid:</strong></div>
-              <div>₹${order.paid_amount.toFixed(2)}</div>
-              ${paymentAmount > 0 ? `
-                <div><strong>Current Payment (${paymentMethod.toUpperCase()}):</strong></div>
-                <div>₹${paymentAmount.toFixed(2)}</div>
-              ` : ''}
-              <div style="border-top: 1px solid #ddd; padding-top: 10px;"><strong>Balance Amount:</strong></div>
-              <div style="border-top: 1px solid #ddd; padding-top: 10px;" class="${balanceAfterPayment > 0 ? 'balance-due' : 'balance-advance'}">
-                ${balanceAfterPayment === 0 ? 'PAID' : balanceAfterPayment > 0 ? `₹${balanceAfterPayment.toFixed(2)} DUE` : `₹${Math.abs(balanceAfterPayment).toFixed(2)} ADVANCE`}
+          <div style="padding: 20px;">
+            <div class="bill-info">
+              <h3>Bill Information</h3>
+              <div class="customer-info">
+                <div>
+                  <p><strong>Bill No:</strong> SGLV-${order.id.slice(-4)}</p>
+                  <p><strong>Date:</strong> ${new Date(order.order_date).toLocaleDateString()}</p>
+                  <p><strong>Customer:</strong> ${customer.name}</p>
+                  <p><strong>Mobile:</strong> ${customer.mobile}</p>
+                </div>
+                <div>
+                  ${customer.shop_name ? `<p><strong>Shop:</strong> ${customer.shop_name}</p>` : ''}
+                  ${customer.location ? `<p><strong>Location:</strong> ${customer.location}</p>` : ''}
+                  <p><strong>Customer Code:</strong> ${customer.qr_code}</p>
+                </div>
               </div>
             </div>
-          </div>
-          
-          ${balanceAfterPayment > 0 ? `
-            <div class="qr-grid">
-              <div class="payment-section">
-                <h3>Pay via UPI</h3>
-                <p>Scan to pay ₹${balanceAfterPayment.toFixed(2)}</p>
-                <img src="${generateUPIQRCode(balanceAfterPayment)}" alt="UPI Payment QR Code" style="width: 150px; height: 150px;">
-                <p><strong>UPI ID:</strong> chowdaryindianbank@ybl</p>
+            
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Quantity</th>
+                  <th>Unit</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${order.order_items?.map(item => {
+                  const vegetable = vegetables.find(v => v.id === item.vegetable_id);
+                  return vegetable ? `
+                    <tr>
+                      <td>${vegetable.name}</td>
+                      <td>${item.quantity}</td>
+                      <td>${vegetable.unit}</td>
+                      <td>₹${item.unit_price.toFixed(2)}</td>
+                      <td>₹${item.total_price.toFixed(2)}</td>
+                    </tr>
+                  ` : '';
+                }).join('')}
+              </tbody>
+            </table>
+            
+            <div class="total-section">
+              <h3>Payment Summary</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div><strong>Total Amount:</strong></div>
+                <div>₹${order.total_amount.toFixed(2)}</div>
+                <div><strong>Previous Paid:</strong></div>
+                <div>₹${order.paid_amount.toFixed(2)}</div>
+                ${paymentAmount > 0 ? `
+                  <div><strong>Current Payment (${paymentMethod.toUpperCase()}):</strong></div>
+                  <div>₹${paymentAmount.toFixed(2)}</div>
+                ` : ''}
+                <div style="border-top: 1px solid #ddd; padding-top: 10px;"><strong>Balance Amount:</strong></div>
+                <div style="border-top: 1px solid #ddd; padding-top: 10px;" class="${balanceAfterPayment > 0 ? 'balance-due' : 'balance-advance'}">
+                  ${balanceAfterPayment === 0 ? 'PAID' : balanceAfterPayment > 0 ? `₹${balanceAfterPayment.toFixed(2)} DUE` : `₹${Math.abs(balanceAfterPayment).toFixed(2)} ADVANCE`}
+                </div>
               </div>
-              <div class="payment-section">
-                <h3>Customer Page</h3>
-                <p>Scan to access your orders</p>
+            </div>
+            
+            ${balanceAfterPayment > 0 ? `
+              <div class="qr-grid">
+                <div class="payment-section">
+                  <h3>Pay via UPI</h3>
+                  <p>Scan to pay ₹${balanceAfterPayment.toFixed(2)}</p>
+                  <img src="${generateUPIQRCode(balanceAfterPayment)}" alt="UPI Payment QR Code" style="width: 150px; height: 150px;">
+                  <p><strong>UPI ID:</strong> chowdaryindianbank@ybl</p>
+                </div>
+                <div class="payment-section">
+                  <h3>Customer Page</h3>
+                  <p>Scan to access your orders</p>
+                  <img src="${generateCustomerPageQR()}" alt="Customer Page QR Code" style="width: 150px; height: 150px;">
+                  <p><strong>View Orders & Pay Balance</strong></p>
+                </div>
+              </div>
+            ` : `
+              <div class="qr-section">
+                <h3>Customer Page Access</h3>
+                <p>Scan to access your orders and place new orders</p>
                 <img src="${generateCustomerPageQR()}" alt="Customer Page QR Code" style="width: 150px; height: 150px;">
-                <p><strong>View Orders & Pay Balance</strong></p>
+                <p><strong>Easy Order Placement</strong></p>
               </div>
-            </div>
-          ` : `
-            <div class="qr-section">
-              <h3>Customer Page Access</h3>
-              <p>Scan to access your orders and place new orders</p>
-              <img src="${generateCustomerPageQR()}" alt="Customer Page QR Code" style="width: 150px; height: 150px;">
-              <p><strong>Easy Order Placement</strong></p>
-            </div>
-          `}
+            `}
+          </div>
           
-          <div style="margin-top: 40px; font-size: 12px; color: #666; text-align: center;">
-            Thank you for your business!<br>
-            Generated by SHREE GANESHA GREEN LEAFY VEGETABLES Management System
+          <div class="footer">
+            <div class="footer-content">
+              <strong>Thank you for your business!</strong><br>
+              Generated by SHREE GANESHA GREEN LEAFY VEGETABLES Management System
+            </div>
           </div>
         </body>
       </html>

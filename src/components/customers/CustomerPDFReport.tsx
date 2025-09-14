@@ -7,6 +7,7 @@ import { useSavePDFReport } from "@/hooks/use-pdf-reports";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import ganeshaLogo from "@/assets/ganesha-logo.png";
+import leafyBackground from "@/assets/leafy-background.png";
 
 interface CustomerPDFReportProps {
   customer: Customer;
@@ -208,15 +209,31 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
           <style>
             body { 
               font-family: Arial, sans-serif; 
-              margin: 20px; 
+              margin: 0; 
               line-height: 1.4;
               color: #333;
             }
             .header { 
+              background: url('${leafyBackground}') center/cover; 
               text-align: center; 
-              border-bottom: 3px solid #22c55e; 
-              padding-bottom: 20px; 
+              padding: 20px; 
               margin-bottom: 30px; 
+              position: relative;
+              min-height: 120px;
+            }
+            .header::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(0,0,0,0.3);
+              z-index: 1;
+            }
+            .header-content {
+              position: relative;
+              z-index: 2;
             }
             .logo { 
               width: 150px; 
@@ -225,17 +242,61 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
               display: block; 
               border-radius: 8px;
               object-fit: contain;
+              border: 3px solid white;
+              background: rgba(255,255,255,0.9);
+              padding: 5px;
             }
             .company-name { 
-              color: #22c55e; 
+              color: white; 
               font-size: 28px; 
               font-weight: bold; 
               margin-bottom: 5px;
+              text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+              border: 2px solid white;
+              background: rgba(0,0,0,0.7);
+              padding: 10px;
+              border-radius: 8px;
+              display: inline-block;
+            }
+            .footer {
+              background: url('${leafyBackground}') center/cover;
+              text-align: center;
+              padding: 15px;
+              margin-top: 30px;
+              position: relative;
+              min-height: 60px;
+            }
+            .footer::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(0,0,0,0.4);
+              z-index: 1;
+            }
+            .footer-content {
+              position: relative;
+              z-index: 2;
+              color: white;
+              text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+              background: rgba(0,0,0,0.6);
+              padding: 10px;
+              border-radius: 8px;
+              border: 2px solid white;
+              display: inline-block;
             }
             .report-title {
               font-size: 18px;
-              color: #666;
+              color: white;
               margin-bottom: 10px;
+              text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+              background: rgba(0,0,0,0.6);
+              padding: 8px;
+              border-radius: 5px;
+              border: 1px solid white;
+              display: inline-block;
             }
             .customer-info { 
               background: #f0f9ff; 
@@ -366,254 +427,177 @@ const CustomerPDFReport: React.FC<CustomerPDFReportProps> = ({ customer, analyti
               body { margin: 0; }
               .page-break { page-break-before: always; }
             }
-            .footer {
-              margin-top: 50px;
-              padding-top: 20px;
-              border-top: 1px solid #e5e7eb;
-              font-size: 12px;
-              color: #666;
-              text-align: center;
-            }
           </style>
         </head>
         <body>
           <div class="header">
-            <img src="${ganeshaLogo}" alt="Lord Ganesha Logo" class="logo" />
-            <div class="company-name">SHREE GANESHA GREEN LEAFY VEGETABLES</div>
-            <div class="report-title">Detailed Customer Business Report</div>
-            <div style="font-size: 14px; color: #666;">Generated on ${new Date().toLocaleString()}</div>
+            <div class="header-content">
+              <img src="${ganeshaLogo}" alt="Lord Ganesha Logo" class="logo" />
+              <div class="company-name">SHREE GANESHA GREEN LEAFY VEGETABLES</div>
+              <div class="report-title">Detailed Customer Business Report</div>
+              <div style="color: white; font-size: 14px; margin-top: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); background: rgba(0,0,0,0.5); padding: 5px; border-radius: 3px; display: inline-block;">Generated on ${new Date().toLocaleString()}</div>
+            </div>
           </div>
           
-          <div class="customer-info">
-            <h2>Customer Information</h2>
-            <div class="info-grid">
-              <div class="info-item">
-                <strong>Name:</strong>
-                <span>${customer.name}</span>
-              </div>
-              <div class="info-item">
-                <strong>Mobile:</strong>
-                <span>${customer.mobile}</span>
-              </div>
-              ${customer.shop_name ? `
+          <div style="padding: 20px;">
+            <div class="customer-info">
+              <h2>Customer Information</h2>
+              <div class="info-grid">
                 <div class="info-item">
-                  <strong>Shop:</strong>
-                  <span>${customer.shop_name}</span>
+                  <strong>Name:</strong>
+                  <span>${customer.name}</span>
                 </div>
-              ` : ''}
-              ${customer.location ? `
                 <div class="info-item">
-                  <strong>Location:</strong>
-                  <span>${customer.location}</span>
+                  <strong>Mobile:</strong>
+                  <span>${customer.mobile}</span>
                 </div>
-              ` : ''}
-              <div class="info-item">
-                <strong>Customer Code:</strong>
-                <span>${customer.qr_code}</span>
-              </div>
-              <div class="info-item">
-                <strong>Total Orders:</strong>
-                <span>${customerOrders.length}</span>
+                ${customer.shop_name ? `
+                  <div class="info-item">
+                    <strong>Shop:</strong>
+                    <span>${customer.shop_name}</span>
+                  </div>
+                ` : ''}
+                ${customer.location ? `
+                  <div class="info-item">
+                    <strong>Location:</strong>
+                    <span>${customer.location}</span>
+                  </div>
+                ` : ''}
+                <div class="info-item">
+                  <strong>Customer Code:</strong>
+                  <span>${customer.qr_code}</span>
+                </div>
+                <div class="info-item">
+                  <strong>Total Orders:</strong>
+                  <span>${customerOrders.length}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="balance-section">
-            <h2>Balance Information</h2>
-            <div class="balance-grid">
-              <div class="balance-item">
-                <div style="font-size: 18px; font-weight: bold; color: #d97706;">₹${(customer.old_balance || 0).toFixed(2)}</div>
-                <div style="font-size: 12px; color: #92400e;">Original Old Balance</div>
-              </div>
-              <div class="balance-item">
-                <div style="font-size: 18px; font-weight: bold; color: #059669;">₹${totalOldBalancePayments.toFixed(2)}</div>
-                <div style="font-size: 12px; color: #047857;">Old Balance Payments</div>
-              </div>
-              <div class="balance-item">
-                <div style="font-size: 18px; font-weight: bold; color: #dc2626;">₹${remainingOldBalance.toFixed(2)}</div>
-                <div style="font-size: 12px; color: #991b1b;">Remaining Old Balance</div>
-              </div>
-              <div class="balance-item">
-                <div style="font-size: 18px; font-weight: bold; color: #2563eb;">₹${currentOrdersBalance.toFixed(2)}</div>
-                <div style="font-size: 12px; color: #1d4ed8;">Current Orders Balance</div>
-              </div>
-              <div class="balance-item">
-                <div style="font-size: 20px; font-weight: bold; color: ${totalOutstandingBalance > 0 ? '#dc2626' : totalOutstandingBalance < 0 ? '#059669' : '#666'};">
-                  ₹${totalOutstandingBalance.toFixed(2)}
+            <div class="balance-section">
+              <h2>Balance Information</h2>
+              <div class="balance-grid">
+                <div class="balance-item">
+                  <div style="font-size: 18px; font-weight: bold; color: #d97706;">₹${(customer.old_balance || 0).toFixed(2)}</div>
+                  <div style="font-size: 12px; color: #92400e;">Original Old Balance</div>
                 </div>
-                <div style="font-size: 12px; color: #666;">Total Outstanding Balance</div>
+                <div class="balance-item">
+                  <div style="font-size: 18px; font-weight: bold; color: #059669;">₹${totalOldBalancePayments.toFixed(2)}</div>
+                  <div style="font-size: 12px; color: #047857;">Old Balance Payments</div>
+                </div>
+                <div class="balance-item">
+                  <div style="font-size: 18px; font-weight: bold; color: #d97706;">₹${remainingOldBalance.toFixed(2)}</div>
+                  <div style="font-size: 12px; color: #92400e;">Remaining Old Balance</div>
+                </div>
+                <div class="balance-item">
+                  <div style="font-size: 18px; font-weight: bold; color: #dc2626;">₹${currentOrdersBalance.toFixed(2)}</div>
+                  <div style="font-size: 12px; color: #991b1b;">Current Orders Balance</div>
+                </div>
+              </div>
+              
+              <div class="balance-status ${totalOutstandingBalance > 0 ? 'balance-positive' : totalOutstandingBalance === 0 ? 'balance-zero' : 'balance-negative'}">
+                Total Outstanding Balance: ${totalOutstandingBalance > 0 ? '₹' + totalOutstandingBalance.toFixed(2) + ' Due' : 
+                  totalOutstandingBalance === 0 ? 'Fully Settled' : '₹' + Math.abs(totalOutstandingBalance).toFixed(2) + ' Advance'}
               </div>
             </div>
-          </div>
 
-          ${oldBalancePayments.length > 0 ? `
+            ${oldBalancePayments.length > 0 ? `
+              <div class="balance-section">
+                <h2>Old Balance Payment History</h2>
+                ${getOldBalancePaymentsHtml()}
+              </div>
+            ` : ''}
+
             <div class="orders-section">
-              <h3>📋 Old Balance Payment History (${oldBalancePayments.length} Payments)</h3>
-              ${getOldBalancePaymentsHtml()}
+              <h3>Order History</h3>
+              ${getOrdersHtml()}
             </div>
-          ` : ''}
-          
-          <div class="analytics-grid">
-            <div class="analytics-card">
-              <h3>Monthly Business</h3>
-              <div class="value">₹${analytics.monthlyTotal.toFixed(2)}</div>
-            </div>
-            <div class="analytics-card">
-              <h3>Yearly Business</h3>
-              <div class="value">₹${analytics.yearlyTotal.toFixed(2)}</div>
-            </div>
-            <div class="analytics-card">
-              <h3>Total Orders</h3>
-              <div class="value">${analytics.totalOrders}</div>
-            </div>
-            <div class="analytics-card">
-              <h3>Total Business</h3>
-              <div class="value">₹${customerOrders.reduce((sum, order) => sum + order.total_amount, 0).toFixed(2)}</div>
-            </div>
-          </div>
-          
-          <div class="balance-status ${totalOutstandingBalance === 0 ? 'balance-zero' : totalOutstandingBalance > 0 ? 'balance-positive' : 'balance-negative'}">
-            ${totalOutstandingBalance === 0 
-              ? '✅ No Outstanding Balance - All payments are up to date' 
-              : totalOutstandingBalance > 0 
-                ? `⚠️ Outstanding Amount: ₹${totalOutstandingBalance.toFixed(2)} - Payment pending` 
-                : `💰 Advance Amount: ₹${Math.abs(totalOutstandingBalance).toFixed(2)} - Credit available`
-            }
-          </div>
-          
-          ${totalOutstandingBalance > 0 ? `
-            <div class="qr-grid">
-              <div class="qr-item">
-                <h3>Pay Outstanding Balance</h3>
-                <img src="${generateUPIQRCode(totalOutstandingBalance)}" alt="UPI Payment QR Code" style="width: 200px; height: 200px;">
-                <p><strong>SHREE GANESHA GREEN LEAFY VEGETABLES</strong></p>
-                <p><strong>Amount:</strong> ₹${totalOutstandingBalance.toFixed(2)}</p>
+
+            ${totalOutstandingBalance > 0 ? `
+              <div class="qr-grid">
+                <div class="qr-item">
+                  <h3 style="color: #22c55e;">Payment QR Code</h3>
+                  <img src="${generateUPIQRCode(totalOutstandingBalance)}" alt="Payment QR Code" style="width: 200px; height: 200px; margin: 10px 0;" />
+                  <p><strong>UPI ID:</strong> chowdaryindianbank@ybl</p>
+                  <p><strong>Amount:</strong> ₹${totalOutstandingBalance.toFixed(2)}</p>
+                </div>
+                <div class="qr-item">
+                  <h3 style="color: #22c55e;">Customer Page Access</h3>
+                  <img src="${generateCustomerPageQR()}" alt="Customer Page QR Code" style="width: 200px; height: 200px; margin: 10px 0;" />
+                  <p><strong>Place New Orders</strong></p>
+                  <p><strong>View Order History</strong></p>
+                </div>
               </div>
-              <div class="qr-item">
-                <h3>Access Your Orders</h3>
-                <img src="${generateCustomerPageQR()}" alt="Customer Page QR Code" style="width: 200px; height: 200px;">
-                <p><strong>View Orders & Place New Orders</strong></p>
-                <p>Scan to access your customer page</p>
+            ` : `
+              <div class="qr-section">
+                <h3 style="color: #22c55e;">Customer Page Access</h3>
+                <img src="${generateCustomerPageQR()}" alt="Customer Page QR Code" style="width: 200px; height: 200px; margin: 10px 0;" />
+                <p><strong>Scan to access your customer portal for easy order placement</strong></p>
               </div>
-            </div>
-          ` : `
-            <div class="qr-section">
-              <h3>📱 Access Your Customer Page</h3>
-              <img src="${generateCustomerPageQR()}" alt="Customer Page QR Code" style="width: 200px; height: 200px;">
-              <p><strong>Scan to view orders and place new orders easily</strong></p>
-            </div>
-          `}
-          
-          <div class="orders-section">
-            <h3>📋 Detailed Order History with Product Images (${customerOrders.length} Orders)</h3>
-            ${getOrdersHtml()}
+            `}
           </div>
           
           <div class="footer">
-            <div><strong>SHREE GANESHA GREEN LEAFY VEGETABLES</strong></div>
-            <div>Fresh Vegetables • Quality Service • Trusted Business Partner</div>
-            <div>Report Generated: ${new Date().toLocaleString()} | Customer ID: ${customer.id.substring(0, 8)}</div>
+            <div class="footer-content">
+              <strong>Thank you for your business!</strong><br>
+              Generated by SHREE GANESHA GREEN LEAFY VEGETABLES Management System
+            </div>
           </div>
         </body>
       </html>
     `;
 
-    try {
-      // Save PDF to Supabase database and storage
-      await savePDFReport.mutateAsync({
-        customerId: customer.id,
-        customerQRCode: customer.qr_code || customer.id.substring(0, 8),
-        htmlContent,
-        reportType: 'customer_report'
-      });
-
-      toast({
-        title: "PDF Report Generated & Saved",
-        description: `Report saved to customer folder: ${customer.name}`,
-      });
-
-      // Open print dialog
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-      }
-    } catch (error) {
-      console.error('Error saving PDF:', error);
-      toast({
-        variant: "destructive",
-        title: "PDF Save Failed",
-        description: "Failed to save PDF report, but you can still print it",
-      });
-
-      // Still allow printing even if save fails
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-      }
-    }
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    
+    toast({
+      title: "PDF Report Generated",
+      description: "Customer report has been opened for printing/saving.",
+    });
   };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Generate Enhanced PDF Report</DialogTitle>
+          <DialogTitle>
+            PDF Report Preview - {customer.name}
+          </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
-          <p>Generate a comprehensive business report for <strong>{customer.name}</strong> including:</p>
-          <ul className="list-disc list-inside text-sm space-y-1">
-            <li>Complete customer information with photos</li>
-            <li>Fixed old balance and payment calculations</li>
-            <li>Detailed old balance tracking and payment history</li>
-            <li>Current orders balance vs old balance breakdown</li>
-            <li>Detailed order history with product images</li>
-            <li>Individual order items with vegetable photos</li>
-            <li>Payment details and status tracking</li>
-            <li>Outstanding balance with UPI payment QR</li>
-            <li>Customer access QR code</li>
-            <li>Professional pagination (no content breaking)</li>
-            <li>Automatic save to Supabase database in customer folder</li>
-          </ul>
-          
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <p className="text-sm text-blue-700">
-              <strong>Orders Found:</strong> {customerOrders.length} orders
-              <br />
-              <strong>Old Balance Payments:</strong> {oldBalancePayments.length} payments
-              <br />
-              <strong>Total Outstanding:</strong> ₹{totalOutstandingBalance.toFixed(2)}
-            </p>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-green-800 mb-2">Report Summary</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>Customer: {customer.name}</div>
+              <div>Mobile: {customer.mobile}</div>
+              <div>Total Orders: {customerOrders.length}</div>
+              <div>Outstanding Balance: ₹{totalOutstandingBalance.toFixed(2)}</div>
+            </div>
           </div>
-          
-          <div className="bg-green-50 p-3 rounded-lg">
-            <p className="text-sm text-green-700">
-              <strong>Fixed Balance Calculations:</strong>
-            </p>
-            <ul className="text-xs text-green-600 list-disc ml-4">
-              <li>Current orders balance: ₹{currentOrdersBalance.toFixed(2)}</li>
-              <li>Remaining old balance: ₹{remainingOldBalance.toFixed(2)}</li>
-              <li>Old balance payments applied: ₹{totalOldBalancePayments.toFixed(2)}</li>
-              <li>Total outstanding: ₹{totalOutstandingBalance.toFixed(2)}</li>
+
+          <div className="text-sm text-muted-foreground">
+            This report includes:
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Complete customer information</li>
+              <li>Detailed order history with items and images</li>
+              <li>Payment tracking and balance calculations</li>
+              <li>QR codes for payments and customer access</li>
+              <li>Professional formatting for business use</li>
             </ul>
           </div>
-          
-          <div className="flex gap-2">
-            <Button 
-              onClick={generatePDF} 
-              className="flex-1"
-              disabled={savePDFReport.isPending}
-            >
-              {savePDFReport.isPending ? 'Saving...' : 'Generate & Save PDF Report'}
-            </Button>
+
+          <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={onClose}>
               Cancel
+            </Button>
+            <Button onClick={generatePDF} className="bg-green-600 hover:bg-green-700">
+              Generate PDF Report
             </Button>
           </div>
         </div>
